@@ -1,2 +1,2 @@
 # honday
-An app for integrating data between Harvest and Monday.com
+An app to integrate data between Harvest and Monday.com

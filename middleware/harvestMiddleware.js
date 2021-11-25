@@ -15,7 +15,6 @@ let currentProjectID = Number(process.env.TEST_HARVEST_PROJECT_ID)
 
 module.exports = {
     getProjectByID: function(req, res, next) {
-        console.log('in harvest');
       
         axios.get(getProjectsFromHarvestEndpoint, {
       
@@ -25,8 +24,6 @@ module.exports = {
             }
       
         }).then( projectsObject => {
-
-            console.log('inside my harvest middleware');
 
             projectsObject.data.projects.map( object => {
 

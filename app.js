@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 dotenv.config(); 
 const port = process.env.SERVER_PORT_8080
 
-/* Middleware */
+/* MIDDLEWARE */
 const { getProjectByID } = require('./middleware/harvestMiddleware');
 const { prepareHarvestDataForMondayApp, sendHarvestDataToMondayApp } = require('./middleware/mondayMiddleware');
 

@@ -1,4 +1,4 @@
-/* API REQUESTS */ 
+/* HTTP CLIENT */ 
 const axios = require('axios');
 
 /* HARVEST ROUTES */
@@ -12,8 +12,13 @@ const getProjectsFromHarvestEndpoint = process.env.HARVEST_URL + getProjectsEndp
 
 /* FUNCTION VARIABLES & UTILS */
 let currentProjectID = Number(process.env.TEST_HARVEST_PROJECT_ID)
+let arrayOfProjectIds = currentProjectID
 
 module.exports = {
+    // TODO: add function to search all projects (or list of specific projects by speicific managers),
+    // if updated_at value has changed when compared to today's date,
+    // then update a collection of boards.
+
     getProjectByID: function(req, res, next) {
       
         axios.get(getProjectsFromHarvestEndpoint, {
@@ -27,11 +32,10 @@ module.exports = {
 
             projectsObject.data.projects.map( object => {
 
-                if(object.id === currentProjectID){
-                    res.locals.myProject = object
-                    // TODO: send boardID along here,
-                    // attach to project object
+                if(object.id === arrayOfProjectIds){
 
+                    res.locals.myProject = object
+                    
                     return next()
                 }
 

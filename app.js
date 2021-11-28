@@ -32,13 +32,13 @@ app.use((req, res, next)=>{
     app.use(getProjectByID)
 
     /* Monday.com API w/GrapQL */
-
     app.use(prepareHarvestDataForMondayApp)
     app.use(sendHarvestDataToMondayApp)
 
     return next()
 
     },{
+      /* exposing proeprties for clarity */ 
       scheduled: true,
       timezone: 'America/New_York'
     }

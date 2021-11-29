@@ -38,7 +38,7 @@ app.use((req, res, next)=>{
     return next()
 
     },{
-      /* exposing proeprties for clarity */ 
+      /* exposing properties for clarity */ 
       scheduled: true,
       timezone: 'America/New_York'
     }

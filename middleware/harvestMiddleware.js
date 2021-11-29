@@ -11,7 +11,7 @@ const HARVEST_ACCESS_TOKEN = process.env.HARVEST_ACCESS_TOKEN
 const getProjectsFromHarvestEndpoint = process.env.HARVEST_URL + getProjectsEndpoint
 
 /* FUNCTION VARIABLES & UTILS */
-let currentProjectID = Number(process.env.TEST_HARVEST_PROJECT_ID)
+let currentProjectID = Number(process.env.DEV_HARVEST_PROJECT_ID)
 let arrayOfProjectIds = currentProjectID
 
 module.exports = {

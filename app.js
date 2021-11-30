@@ -31,7 +31,7 @@ app.use((req, res, next)=>{
     if(cronIsScheduled === true){
     
     const job = cron.schedule('*/1 * * * *', () => {
-    
+      //TODO: '0 0 0 * * *' === run every day at 12:00 AM
       console.log('---------------------');
       console.log('Honday Bot sending data ... ');
           

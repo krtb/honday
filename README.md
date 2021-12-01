@@ -41,12 +41,6 @@ Owned by [Pendo's](https://pendo.io/) Proffesional Services Engineering team.
     * JS runtime
     * Provides access to globals such as `module`, `require()`, `process`
     * Built-in modules, such as `https`, `fs`, `os` and `path`
-* [Babel](https://babeljs.io/)
-    * Transpiler for various versions of JavaScript
-    * Allows the use of modern JS features across most browser versions
-* [Webpack](https://webpack.js.org)
-    * bundles files, in order to be injected into the dependency graph for HTML
-    * loaders provide Webpack ability to process different types of files
 * [Express](expressjs.com)
     * Web app framework, provides middleware and methods for API creation
 * [node-cron](https://www.npmjs.com/package/node-cron)

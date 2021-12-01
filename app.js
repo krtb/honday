@@ -30,7 +30,7 @@ app.use((req, res, next)=>{
     
     if(cronIsScheduled === true){
     
-    const job = cron.schedule('*/1 * * * *', () => {
+    const job = cron.schedule('30 0-59 * * * *', () => {
       //TODO: '0 0 0 * * *' === run every day at 12:00 AM
       console.log('---------------------');
       console.log('Honday Bot sending data ... ');
@@ -53,8 +53,7 @@ app.use((req, res, next)=>{
       );
       
       job.start()
-      next()
-
+      return next()
     }
   } catch (error) {
 

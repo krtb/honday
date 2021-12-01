@@ -18,7 +18,26 @@ module.exports = {
     // TODO: add function to search all projects (or list of specific projects by speicific managers),
     // if updated_at value has changed when compared to today's date,
     // then update a collection of boards.
+    getAllProjects: (req, res, next) => {
+        axios.get(getProjectsFromHarvestEndpoint, {
+      
+            headers: {
+                "Authorization": "Bearer " + HARVEST_ACCESS_TOKEN,
+                "Harvest-Account-ID": HARVEST_ACCOUNT_ID 
+            }
+      
+        }).then( projectsObject => {
 
+            projectsObject.data.projects.map( aProject => {
+
+                console.log(aProject, 'allProjects');
+
+            })
+        })
+        .catch((err) => {
+            console.error(`The following ERRORS occurred:` + err)
+        })
+    },
     getProjectByID: function(req, res, next) {
       
         axios.get(getProjectsFromHarvestEndpoint, {
@@ -44,5 +63,5 @@ module.exports = {
         .catch((err) => {
             console.error(`The following ERRORS occurred:` + err)
         })
-      }
+    }
 }

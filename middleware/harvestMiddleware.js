@@ -15,9 +15,7 @@ let currentProjectID = Number(process.env.DEV_HARVEST_PROJECT_ID)
 let arrayOfProjectIds = currentProjectID
 
 module.exports = {
-    // TODO: add function to search all projects (or list of specific projects by speicific managers),
-    // if updated_at value has changed when compared to today's date,
-    // then update a collection of boards.
+
     getAllProjects: (req, res, next) => {
         axios.get(getProjectsFromHarvestEndpoint, {
       
@@ -27,12 +25,12 @@ module.exports = {
             }
       
         }).then( projectsObject => {
-
-            projectsObject.data.projects.map( aProject => {
-
-                console.log(aProject, 'allProjects');
-
-            })
+          // NOTE: Most recent projects will appear at top of list, according to updated_at field.
+          const anObjectOfProjects = projectsObject.data; //objects in array, other properties outside
+          const totalEntriesPerPage = projectsObject.per_page // 100
+          const totalPagesOfProjects = projectsObject.total_pages; // 32
+          const totalEntriesOfProjects = projectsObject.total_entries // 3120
+          console.log(projectsObject.data, '-----> projects object');
         })
         .catch((err) => {
             console.error(`The following ERRORS occurred:` + err)

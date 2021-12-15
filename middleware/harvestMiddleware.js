@@ -55,6 +55,32 @@ module.exports = {
         console.log(err, '------> There was an Error.');
       })
     },
+    getProjectsAndTasksFromAssignedTasks: (req, res, next)=>{
+      axios.get(getAllAssignedTasksFromHarvestUrl, axiosConfigObject)
+      .then((allAssignedTasksResponse)=> {
+
+        const {task_assignments} = allAssignedTasksResponse.data;
+
+        let count = 0
+
+        const assignedTaskProjectsAndTasks = task_assignments.map((aSingleAssignedTaskObject)=> {
+          //NOTE: Displays a count of items
+          ++count
+
+          const dataMap = {
+            task_count: count,
+            project: 'project',
+            task: 'project',
+          };   
+                 
+          dataMap.project = aSingleAssignedTaskObject.project;
+          dataMap.task = aSingleAssignedTaskObject.task;
+          return dataMap;
+        })
+
+        console.log(assignedTaskProjectsAndTasks, '------> Projects and Tasks!');
+      })
+    },
     getProjectByID: function(req, res, next) {
       
         axios.get(getProjectsFromHarvestEndpoint, axiosConfigObject)

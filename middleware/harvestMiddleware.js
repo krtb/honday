@@ -5,11 +5,13 @@ const axios = require('axios');
 const getProjectsEndpoint = `/v2/projects`;
 const getUserAssignmentsEndpoint =  `/v2/user_assignments`;
 const getAllAssignedTasksEndpoint = `/v2/task_assignments`;
+const getAllUserAssignmentsEndpoint =  `/v2/user_assignments`;
 /* ENVIRONMENT VARIABLES */
 const HARVEST_ACCOUNT_ID = process.env.HARVEST_ACCOUNT_ID;
 const HARVEST_ACCESS_TOKEN = process.env.HARVEST_ACCESS_TOKEN;
 const getProjectsFromHarvestUrl = process.env.HARVEST_URL + getProjectsEndpoint;
 const getAllAssignedTasksFromHarvestUrl = process.env.HARVEST_URL + getAllAssignedTasksEndpoint;
+const getProjectUserAssignmentsUrl = process.env.HARVEST_URL + getAllUserAssignmentsEndpoint;
 
 /* FUNCTION VARIABLES & UTILS */
 const currentProjectID = Number(process.env.DEV_HARVEST_PROJECT_ID);
@@ -40,6 +42,43 @@ module.exports = {
         .catch((err) => {
             console.error(`The following ERRORS occurred:` + err)
         })
+    },
+    getAllProjectUserAssignments: async (req,res,next) => {
+      // set a counter
+      let page = 1;
+      // create empty array where we want to store the userAssignments objects for each loop
+      let userAssignments = [];
+      // create a lastResult array which is going to be used to check if there is a next page
+      let lastResult = [];
+      do {
+        // try catch to catch any errors in the async api call
+        try {
+          // make api call
+          let paginationUrl = `https://api.harvestapp.com/v2/user_assignments?page=${page}&per_page=100&ref=next&is_active=true&updated_since=2021-09-01T12:00:22Z`
+          let checkThis
+
+          checkThis = await axios.get(paginationUrl, axiosConfigObject)
+          .then((resp)=> {
+            console.log(resp, 'this is the response');
+            let data = resp.data.user_assignments
+            lastResult = resp.data
+
+            return data.map((aSingleUserAssignment)=> {
+              userAssignments.push(aSingleUserAssignment);
+            })
+          })
+
+          page++;
+
+        } catch (err) {
+
+          console.error(`There was an error ---> ${err}`);
+
+        }
+        // keep running until there's no next page
+      } while (lastResult.next_page !== null);
+      // let's log out our new userAssignments array
+      console.log(userAssignments);
     },
     getAllAssignedTasks: (req, res, next) => {
       // NOTE: Most recent assignedTasks will appear at top of list, according to created_at field.
@@ -72,7 +111,7 @@ module.exports = {
             project: 'project',
             task: 'project',
           };   
-                 
+
           dataMap.project = aSingleAssignedTaskObject.project;
           dataMap.task = aSingleAssignedTaskObject.task;
           return dataMap;

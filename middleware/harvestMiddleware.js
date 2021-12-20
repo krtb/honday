@@ -15,10 +15,6 @@ const getProjectUserAssignmentsUrl = process.env.HARVEST_URL + getAllUserAssignm
 
 /* FUNCTION VARIABLES & UTILS */
 const currentProjectID = Number(process.env.DEV_HARVEST_PROJECT_ID);
-//TODO: GET array of all current Users, get all of their project IDs.
-// OR => only update projects based on last upadted date
-// AND => Still need to get a list of Users, and their emails, match to Monday
-//TODO: get all emails in Monday (?)
 const arrayOfProjectIds = currentProjectID;
 const axiosConfigObject = {
   headers: {
@@ -72,7 +68,7 @@ module.exports = {
 
         } catch (err) {
 
-          console.error(`There was an error ---> ${err}`);
+          console.error(`There was an error ------> ${err}`);
 
         }
         // keep running until there's no next page

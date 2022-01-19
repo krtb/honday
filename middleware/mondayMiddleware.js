@@ -181,7 +181,7 @@ module.exports = {
     
     // Construct GraphQl query, for Monday.com to consume when Creating New TimeEntry Items
     // First part of Axios request
-    let queryToCreateContent = `mutation ( $myItemName: String!, $boardId: Int!, $column_values: JSON!) {
+    let query = `mutation ( $myItemName: String!, $boardId: Int!, $column_values: JSON!) {
       create_item(
           board_id: $boardId,
           item_name: $myItemName,
@@ -194,11 +194,12 @@ module.exports = {
     // Array[] of harvestTimeEntry objects
     // Loop through to createing objects fith columne fields for Monday.com
     // Second part of Axios Request
+    // https://api.developer.monday.com/docs/guide-to-changing-column-data
+
     let mondayObjects = harvestObjectForMonday.map((singleHarvestObject)=>{
       console.log(singleHarvestObject, 'singleHarvestObject - 2 ');
 
-      let variablesForCreatingContent = {
-        // https://api.developer.monday.com/docs/guide-to-changing-column-data
+      let variablesForCreatingContent = JSON.stringify({
         "myItemName": singleHarvestObject.submitter,
         "boardId": devMondayBoardID,
         "column_values": JSON.stringify({
@@ -207,20 +208,19 @@ module.exports = {
           "person": {"personsAndTeams":[{"id":`${singleHarvestObject.submitterId}`,"kind":"person"}]},
           "numbers": singleHarvestObject.submitterId,
           "text": `${singleHarvestObject.billableBoolean.toString()}`,
-          "text2": {"text": singleHarvestObject.client},
+          "text2": singleHarvestObject.client,
           "text6": singleHarvestObject.projectName,
           "text20": singleHarvestObject.projectCode,
           "text8": singleHarvestObject.projectNotes,
-          "numbers7": singleHarvestObject.hours,
+          "numbers7": singleHarvestObject.hoursSubmitted,
           "text0": singleHarvestObject.task,
-          // "status9": "Sessions",
-          })
-      }
+        })
+      })
 
       return variablesForCreatingContent
     })
 
-    console.log(mondayObjects, 'mondayObjects - 3');
+    console.log('mondayObjects ------------- 3');
     // Start of logic for loadAPIRequestsWithDelayTimer()  ------------------------------------------------------------------------------------<
 
     // Returns a Promise that resolves after "ms" Milliseconds
@@ -230,11 +230,11 @@ module.exports = {
     async function loadAPIRequestsWithDelayTimer() { // We need to wrap the loop in a asynchronus function for this to work
       console.log('Your Harvest copllection of User IDs is this long: ' + mondayObjects.length );
 
-      for (var i = 0; i < mondayObjects.length - 1; mondayObjects[i++]) {
-        
+      for (var i = 0; i <= mondayObjects.length - 1; mondayObjects[i++]) {
+
         axios.post(mondayURL, {
-          'query':queryToCreateContent,
-          'variables': JSON.stringify(mondayObjects[i])
+          'query': query,
+          'variables': mondayObjects[i]
         }, {
             headers: {
               'Content-Type': `application/json`,
@@ -242,7 +242,7 @@ module.exports = {
             },
         })
         .then((response)=>{
-          console.log(response, '<--- Requests ok');
+          console.log(response.data, '<--- Requests ok');
         })
         .catch((error)=> 'There was an error here: ' + error)
 

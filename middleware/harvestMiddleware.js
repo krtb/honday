@@ -1,22 +1,29 @@
 /* HTTP CLIENT */ 
 const axios = require('axios');
 
-/* HARVEST ROUTES */
-const getProjectsEndpoint = `/v2/projects`;
-const getUserAssignmentsEndpoint =  `/v2/user_assignments`;
-const getAllAssignedTasksEndpoint = `/v2/task_assignments`;
-const getAllUserAssignmentsEndpoint =  `/v2/user_assignments`;
-/* ENVIRONMENT VARIABLES */
+/*  HARVEST CREDENTIALS */
 const HARVEST_ACCOUNT_ID = process.env.HARVEST_ACCOUNT_ID;
 const HARVEST_ACCESS_TOKEN = process.env.HARVEST_ACCESS_TOKEN;
+
+/* HARVEST ENDPOINTS */
+const getProjectsEndpoint = `/v2/projects`;
+const getAllAssignedTasksEndpoint = `/v2/task_assignments`;
+const getAllUserAssignmentsEndpoint =  `/v2/user_assignments`;
+const getSingleProjectEndpoint = `/v2/projects/`;
+const getTimeEntriesEndpoint = `/v2/time_entries`;
+
+/* HARVEST API URL CONSTRUCTION */
 const getProjectsFromHarvestUrl = process.env.HARVEST_URL + getProjectsEndpoint;
+const getASingleTimeEntryFromHarvestUrl = process.env.HARVEST_URL + getTimeEntriesEndpoint;
 const getAllAssignedTasksFromHarvestUrl = process.env.HARVEST_URL + getAllAssignedTasksEndpoint;
+const getASingleProjectFromHarvestUrl = process.env.HARVEST_URL + getSingleProjectEndpoint;
 const getProjectUserAssignmentsUrl = process.env.HARVEST_URL + getAllUserAssignmentsEndpoint;
 
-/* FUNCTION VARIABLES & UTILS */
+/* GLOBAL VARIABLES & UTILS */
 const currentProjectID = Number(process.env.DEV_HARVEST_PROJECT_ID);
 const arrayOfProjectIds = currentProjectID;
 const axiosConfigObject = {
+  // TODO: Add UserAgent attribute required by harvest, review if axios sending by default
   headers: {
     "Authorization": "Bearer " + HARVEST_ACCESS_TOKEN,
     "Harvest-Account-ID": HARVEST_ACCOUNT_ID 
@@ -24,56 +31,61 @@ const axiosConfigObject = {
 }
 
 module.exports = {
-  getAllProjectUserAssignments: async (req,res,next) => {
-    console.log('Honday Bot searching for projectUserAssignments...');
+  getAllTimeEntries: async (req,res,next) => {
+    console.log('HondayBot searching for projectUserAssignments...');
     // set a counter
     let page = 1;
     // create empty array where we want to store the userAssignments objects for each loop
-    let userAssignments = [];
+    let timeEntries = [];
     // create a lastResult array which is going to be used to check if there is a next page
     let lastResult = [];
+    let pageCount = 1
 
     do {
       try {
-        // make api call
-        let paginationUrl = `https://api.harvestapp.com/v2/user_assignments?page=${page}&per_page=100&ref=next&is_active=true&updated_since=2021-09-01T12:00:22Z`
+        // GET request, sent to 'time_entries' endpoint
+        let paginationUrl = `https://api.harvestapp.com/v2/time_entries?page=${page}&per_page=100&ref=next&is_active=true&updated_since=2021-09-01T12:00:22Z`
+        // TODO: remove this variable
         let checkThis
 
         checkThis = await axios.get(paginationUrl, axiosConfigObject)
         .then((resp)=> {
+          // TODO: Get total number of pages from data, display in console log
 
           let data = resp.data
+
+          let totalPageCount = data.total_pages
           // Pull objects, inside an array, that are the first property of the data objecs from above
           let onlyObjectsRequired = data[Object.keys(data)[0]]
           // TODO: Change back to resp.data?
           lastResult = data
 
-          onlyObjectsRequired.filter((aSingleUserAssignment)=> {
-
+          onlyObjectsRequired.map((aSingleUserAssignment)=> {
+            // console.log(aSingleUserAssignment, 'aSingleUserAssignment <------');
             if(aSingleUserAssignment.project.code === 'PS-12222'){
-              userAssignments.push(aSingleUserAssignment);
-              console.log(`Honday Bot captured a project, on Harvest API Page: ${page}`);
-
+              timeEntries.push(aSingleUserAssignment);
+              console.log(`HondayBot found timeEntry, on HarvestAPI Page: ${pageCount} / ${totalPageCount}`);
+              pageCount++
             }
             if(aSingleUserAssignment.project.code === 'PS-004298'){
-              userAssignments.push(aSingleUserAssignment);
-              console.log(`Honday Bot captured a project, on Harvest API Page: ${page}`);
-
+              timeEntries.push(aSingleUserAssignment);
+              console.log(`HondayBot found timeEntry, on HarvestAPI Page: ${pageCount} / ${totalPageCount}`);
+              pageCount++
             }
             if(aSingleUserAssignment.project.code === 'PS-004513'){
-              userAssignments.push(aSingleUserAssignment);
-              console.log(`Honday Bot captured a project, on Harvest API Page: ${page}`);
-
+              timeEntries.push(aSingleUserAssignment);
+              console.log(`HondayBot found timeEntry, on HarvestAPI Page: ${pageCount} / ${totalPageCount}`);
+              pageCount++
             }
             if(aSingleUserAssignment.project.code === 'PS-11514'){
-              userAssignments.push(aSingleUserAssignment);
-              console.log(`Honday Bot captured a project, on Harvest API Page: ${page}`);
-
+              timeEntries.push(aSingleUserAssignment);
+              console.log(`HondayBot found timeEntry, on HarvestAPI Page: ${pageCount} / ${totalPageCount}`);
+              pageCount++
             }
             if(aSingleUserAssignment.project.code === 'PS-004575'){
-              userAssignments.push(aSingleUserAssignment);
-              console.log(`Honday Bot captured a project, on Harvest API Page: ${page}`);
-
+              timeEntries.push(aSingleUserAssignment);
+              console.log(`HondayBot found timeEntry, on HarvestAPI Page: ${pageCount} / ${totalPageCount}`);
+              pageCount++
             }
           })
 
@@ -83,23 +95,23 @@ module.exports = {
 
       } catch (err) {
 
-        console.error(`There was an error ------> ${err}`);
+        console.error(`There was a problem in 'getAllTimeEntries'------> ${err}`);
 
       }
       // keep running until there's no next page
     } while (lastResult.next_page !== null);
     // store found objects
-    console.log(userAssignments, 'userAssignments');
-    res.locals.allProjectUserAssignments = userAssignments
+    console.log(timeEntries, 'timeEntries');
+    res.locals.allTimeEntriesFromHarvest = timeEntries
 
-    console.log(userAssignments.length, '... getAllProjectUserAssignments middleware complete');
+    console.log(timeEntries.length, '... getAllProjectUserAssignments middleware complete');
 
     return next()
   },
-  filterProjectUserData: async (req, res, next) => {
+  buildTimeEntriesForMondayBoard: async (req, res, next) => {
 
     // Pull stored UserProjectAssignment Objects
-    let allMyProjectUserAssignments = await res.locals.allProjectUserAssignments
+    let allHarvestTimeEntries = await res.locals.allTimeEntriesFromHarvest
 
     // To hold filtered time stamps only
     let filteredUserProjectArrays
@@ -115,79 +127,103 @@ module.exports = {
           + pad(datOfToday.getUTCDate())
     }(dateOfToday)
     
-    filteredUserProjectArrays = allMyProjectUserAssignments.map((singleProjectUserAssignment)=>{
+    filteredTimeEntryObjectsForMonday = allHarvestTimeEntries.map((oneTimeEntry)=>{
 
       // Filter out required information, to communicate with Monday.com
-      let projectUserData = {
-        // Remove section of timestamp that we do not need when comparing to today's date format
-        // Original harvestTimeStamps look like this ===> 2021-09-10T18:55:33Z
-        updatedAt: `${singleProjectUserAssignment.updated_at.split('T')[0]}`, 
-        projectID: `${singleProjectUserAssignment.project.id}`, 
-        projectName: `${singleProjectUserAssignment.project.name}`, 
-        projectCode: `${singleProjectUserAssignment.project.code}`,
-        userID: `${singleProjectUserAssignment.user.id}`,
-        userName: `${singleProjectUserAssignment.user.name}`,
+      const mondayTimeEntry = {
+        timeEntryId: oneTimeEntry.id,
+        submitterId: oneTimeEntry.user.id,
+        submitter: oneTimeEntry.user.name,
+        submitterEmail: '',
+        mondayId: 0,
+        billableBoolean: oneTimeEntry.billable,
+        dateSubmitted: oneTimeEntry.spent_date,
+        hoursSubmitted: oneTimeEntry.hours,
+        client: oneTimeEntry.client.name,
+        projectName: oneTimeEntry.project.name,
+        projectCode: oneTimeEntry.project.code,
+        projectNotes: oneTimeEntry.notes,
+        task: oneTimeEntry.task.name,
       }
 
-      return projectUserData
+      return mondayTimeEntry
     })
 
 
     // Store locally
-    res.locals.filteredUserProjectArrays = filteredUserProjectArrays
-    console.log(filteredUserProjectArrays, '... filteredUserProjectArrays middleware complete');
+    res.locals.filteredTimeEntryObjectsForMonday = filteredTimeEntryObjectsForMonday
+    console.log(filteredTimeEntryObjectsForMonday, '... filteredUserProjectArrays middleware complete', filteredTimeEntryObjectsForMonday.length);
 
     next()
   },
-  getAllProjects: (req, res, next) => {
-      axios.get(getProjectsFromHarvestUrl, axiosConfigObject)
-      .then( projectsObject => {
-        // NOTE: Most recent projects will appear at top of list, according to created_at field.
-        const aProjectsListObject = projectsObject.data; //objects in array, other properties outside
-        const totalEntriesPerPage = projectsObject.per_page // 100
-        const totalPagesOfProjects = projectsObject.total_pages; // 32
-        const totalEntriesOfProjects = projectsObject.total_entries // 3120
-        console.log(aProjectsListObject, '-----> All Projects!');
-      })
-      .catch((err) => {
-          console.error(`The following ERRORS occurred:` + err)
-      })
-    },
-    getAllAssignedTasks: (req, res, next) => {
-      // NOTE: Most recent assignedTasks will appear at top of list, according to created_at field.
-      axios.get(getAllAssignedTasksFromHarvestUrl, axiosConfigObject)
-      .then((assignedTasksObject)=> {
-        const anAssignedTasksListObject = assignedTasksObject.data;
-        const totalPerPageOfAssignedTasks = assignedTasksObject.per_page // 100
-        const totalPagesOfAssignedTasks = assignedTasksObject.total_pages; // 170
-        const totalEntriesPerPageOfAssignedTasks = assignedTasksObject.total_entries; // 16,967
-        console.log(anAssignedTasksListObject, '------> All Assigned Tasks!')
-      })
-      .catch((error)=> {
-        console.log(error, '------> There was an Error.');
-      })
-    },
-    getProjectsAndTasksFromAssignedTasks: (req, res, next)=>{
-      axios.get(getAllAssignedTasksFromHarvestUrl, axiosConfigObject)
-      .then((allAssignedTasksResponse)=> {
-        const {task_assignments} = allAssignedTasksResponse.data;
-        let count = 0
-        const assignedTaskProjectsAndTasks = task_assignments.map((aSingleAssignedTaskObject)=> {
-          //NOTE: Displays a count of items
-          ++count
+  replaceSubmitterNameWithEmail: async (req, res, next) => {
+    // Users{} from Monday.com, contain Email and Id properties 
+    let mondayUserEmailIdObjects = res.locals.allMondayUsersContainer
+    // TimeEntries{} from Harvest, contain properties formatted in a previous function - thus unique names
+    let filteredTimeEntryObjectsForMonday = res.locals.filteredTimeEntryObjectsForMonday
 
-          const dataMap = {
-            task_count: count,
-            project: 'project',
-            task: 'project',
-          };   
+    // Creates array of only Harvest User Ids, required to request specific Users, to then pull email values
+    let harvestUserIdCollection = filteredTimeEntryObjectsForMonday.map((singleTimeEntry)=> {
+      return singleTimeEntry.submitterId
+    })
 
-          dataMap.project = aSingleAssignedTaskObject.project;
-          dataMap.task = aSingleAssignedTaskObject.task;
-          return dataMap;
+    // To hold final collection of Objects{}, sanitized to be consumed then be mapped ot Graphql/Monday.com values
+    let completeHarvestObjectWithMondayID = [];
+
+    //TODO: loop through filteredTimeEntryObjectsForMonday and use getAllUsersToFilterIDs, to inpute an email, then match based on that.
+
+    // Note: This function kicks butt  ------------------------------------------------------------------------------------<
+    // Returns a Promise that resolves after "ms" Milliseconds
+    const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
+    // Function below will push values to this Array[]
+    let harvestUsersContainer = [];
+
+      async function loadAPIRequestsWithDelayTimer() { // We need to wrap the loop in a asynchronus function for this to work
+        console.log('Your Harvest copllection of User IDs is this long: ' + harvestUserIdCollection.length );
+        for (var i = 0; i < harvestUserIdCollection.length - 1; harvestUserIdCollection[i++]) {
+          // Injects Specified User Ids into URL, to request their User Profiles
+          let paginationUrl = `https://api.harvestapp.com/v2/users/${harvestUserIdCollection[i]}`
+
+          console.log(i);
+
+          // Send GET request to specific URL Endpoint, dynamically defined above
+          axios.get(paginationUrl, axiosConfigObject)
+          .then((response)=>{
+            // Push to me array, defined outside of async function
+            harvestUsersContainer.push(response.data)
+          })
+
+          // When the engine reaches the await part, it sets a timeout and halts the execution of the async function.
+          await timer(1000); // Then the created Promise can be awaited
+          // Finally the timeout completes & execution continues at this point. 
+        }
+
+        // Map over list of all Harvest Users, to match based on TimeEntryUserId And HarvestUserId
+        harvestUsersContainer.map((singleHarvestUserProfile)=>{
+          
+          // TODO: get TimeEntryUserIds, use to match with Harvest User Ids and add email
+
+          // Map over singleTimeEntry{}, an object which has an empty string set to the property singleTimeEntry.submitterEmail
+          // Information needs to be added from a User{}, which is requested in the async function above.
+          filteredTimeEntryObjectsForMonday.map((singleTimeEntry)=> {
+            // If a HarvestTimeEntry and a HarvestUserProfile ahve the same ID
+            // Then set a submitterEmail
+            // And set a Monday ID in my HarvestTimeEntry Object
+            if(singleTimeEntry.submitterId === singleHarvestUserProfile.id){
+              singleTimeEntry.submitterEmail = singleHarvestUserProfile.email 
+              singleTimeEntry.mondayId = singleHarvestUserProfile.id
+            }
+          })
+
         })
 
-        console.log(assignedTaskProjectsAndTasks, '------> Projects and Tasks!');
-      })
-    },
+        // Finally, set TimeEntry Object form Harvest locally, with Emails & Ids added
+        res.locals.filteredTimeEntryObjectsForMondayWithUserEmail = filteredTimeEntryObjectsForMonday
+        return next()
+      }
+      // Note: End of butt kick funcrtion here  ------------------------------------------------------------------------------------<
+
+      loadAPIRequestsWithDelayTimer();
+
+  }
 }

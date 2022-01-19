@@ -94,8 +94,8 @@ module.exports = {
         // When the engine reaches the await part, it sets a timeout and halts the execution of the async function.
         await timer(1000); // Then the created Promise can be awaited
         // Finally the timeout completes & execution continues at this point. 
-        console.log('Total Page Count: ' + totalPageCount + ' /',
-        'Current Page: ' + pageCount + ' /',
+        console.log(
+        `On Page: ${pageCount}` + ` of ${totalPageCount}` + ' /',
         'TimeEntries Stored Total: ' + filteredTimeEntryObjectsBySpecificProjectCode.length,
         );
       }
@@ -111,7 +111,7 @@ module.exports = {
   buildTimeEntriesForMondayBoard: async (req, res, next) => {
 
     // Pull stored UserProjectAssignment Objects
-    let allHarvestTimeEntries = await res.locals.allTimeEntriesFromHarvest
+    let allHarvestTimeEntries = await res.locals.filteredTimeEntryObjectsBySpecificProjectCode
 
     // To hold filtered time stamps only
     let filteredUserProjectArrays

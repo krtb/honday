@@ -32,81 +32,81 @@ const axiosConfigObject = {
 
 module.exports = {
   getAllTimeEntries: async (req,res,next) => {
-    console.log('HondayBot searching for projectUserAssignments...');
+    console.log('HondayBot searching for Time Entries...');
     // set a counter
-    let page = 1;
+    let startPage = 1;
     // create empty array where we want to store the userAssignments objects for each loop
-    let timeEntries = [];
+    let filteredTimeEntryObjectsBySpecificProjectCode = []
     // create a lastResult array which is going to be used to check if there is a next page
     let lastResult = [];
     let pageCount = 1
 
-    do {
-      try {
-        // GET request, sent to 'time_entries' endpoint
-        let paginationUrl = `https://api.harvestapp.com/v2/time_entries?page=${page}&per_page=100&ref=next&is_active=true&updated_since=2021-09-01T12:00:22Z`
-        // TODO: remove this variable
-        let checkThis
+    // Returns a Promise that resolves after Milliseconds
+    const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
 
-        checkThis = await axios.get(paginationUrl, axiosConfigObject)
+    async function loadAPIRequestsWithDelayTimer() { // We need to wrap the loop in a asynchronus function for this to work
+      let paginationUrl = `https://api.harvestapp.com/v2/time_entries?page=${startPage}&per_page=100&ref=next&is_active=true&updated_since=2021-09-01T12:00:22Z`
+
+      // Initial Total Page Count
+      let totalPageCount = 0;
+      let arrayOfTimeEntryObjects = ''
+
+      // Dynamically call TimeEntries from Harvestm, with API pagination
+      await axios.get(paginationUrl, axiosConfigObject)
         .then((resp)=> {
           // TODO: Get total number of pages from data, display in console log
-
           let data = resp.data
+          // Currently 112
+          totalPageCount = data.total_pages
+          // 100 per GET Request
+          arrayOfTimeEntryObjects = data[Object.keys(data)[0]]
+      })
+      
+      for (let pageCount = 1; pageCount <= totalPageCount; pageCount++) {
+        paginationUrl = `https://api.harvestapp.com/v2/time_entries?page=${pageCount}&per_page=100&ref=next&is_active=true&updated_since=2021-09-01T12:00:22Z`
+        // console.log('Page Count inside function: ' + pageCount, 'Total Page Count: ' +  totalPageCount);
 
-          let totalPageCount = data.total_pages
-          // Pull objects, inside an array, that are the first property of the data objecs from above
-          let onlyObjectsRequired = data[Object.keys(data)[0]]
-          // TODO: Change back to resp.data?
-          lastResult = data
+        axios.get(paginationUrl, axiosConfigObject)
+        .then((response)=>{
+          arrayOfTimeEntryObjects = response.data.time_entries
 
-          onlyObjectsRequired.map((aSingleUserAssignment)=> {
-            // console.log(aSingleUserAssignment, 'aSingleUserAssignment <------');
-            if(aSingleUserAssignment.project.code === 'PS-12222'){
-              timeEntries.push(aSingleUserAssignment);
-              console.log(`HondayBot found timeEntry, on HarvestAPI Page: ${pageCount} / ${totalPageCount}`);
-              pageCount++
-            }
-            if(aSingleUserAssignment.project.code === 'PS-004298'){
-              timeEntries.push(aSingleUserAssignment);
-              console.log(`HondayBot found timeEntry, on HarvestAPI Page: ${pageCount} / ${totalPageCount}`);
-              pageCount++
-            }
-            if(aSingleUserAssignment.project.code === 'PS-004513'){
-              timeEntries.push(aSingleUserAssignment);
-              console.log(`HondayBot found timeEntry, on HarvestAPI Page: ${pageCount} / ${totalPageCount}`);
-              pageCount++
-            }
-            if(aSingleUserAssignment.project.code === 'PS-11514'){
-              timeEntries.push(aSingleUserAssignment);
-              console.log(`HondayBot found timeEntry, on HarvestAPI Page: ${pageCount} / ${totalPageCount}`);
-              pageCount++
-            }
-            if(aSingleUserAssignment.project.code === 'PS-004575'){
-              timeEntries.push(aSingleUserAssignment);
-              console.log(`HondayBot found timeEntry, on HarvestAPI Page: ${pageCount} / ${totalPageCount}`);
-              pageCount++
-            }
-          })
+          var filter = {
+            first: 'PS-12222',
+            second: 'PS-11514',
+            third: 'PS-004513',
+            fourth: 'PS-004298',
+            fith: 'PS-004575',
+          };
+
+          
+          arrayOfTimeEntryObjects.map((item) => {
+            Object.values(filter).map((specifiedProjectCode)=>{
+              if(specifiedProjectCode === item.project.code){
+                filteredTimeEntryObjectsBySpecificProjectCode.push(item);
+              }
+            })
+
+          });
 
         })
+        .catch((error)=> 'There was an error here: ' + error)
 
-        page++;
-
-      } catch (err) {
-
-        console.error(`There was a problem in 'getAllTimeEntries'------> ${err}`);
-
+        // When the engine reaches the await part, it sets a timeout and halts the execution of the async function.
+        await timer(1000); // Then the created Promise can be awaited
+        // Finally the timeout completes & execution continues at this point. 
+        console.log('Total Page Count: ' + totalPageCount + ' /',
+        'Current Page: ' + pageCount + ' /',
+        'TimeEntries Stored Total: ' + filteredTimeEntryObjectsBySpecificProjectCode.length,
+        );
       }
-      // keep running until there's no next page
-    } while (lastResult.next_page !== null);
-    // store found objects
-    console.log(timeEntries, 'timeEntries');
-    res.locals.allTimeEntriesFromHarvest = timeEntries
 
-    console.log(timeEntries.length, '... getAllProjectUserAssignments middleware complete');
+      console.log(filteredTimeEntryObjectsBySpecificProjectCode, '==============> FILTERING OF TIME ENTRIES DONE');
+      res.locals.filteredTimeEntryObjectsBySpecificProjectCode = filteredTimeEntryObjectsBySpecificProjectCode
+      return next()
+    }
 
-    return next()
+    loadAPIRequestsWithDelayTimer()
+    // End of logic for loadAPIRequestsWithDelayTimer()  ------------------------------------------------------------------------------------<
   },
   buildTimeEntriesForMondayBoard: async (req, res, next) => {
 
@@ -128,7 +128,7 @@ module.exports = {
     }(dateOfToday)
     
     filteredTimeEntryObjectsForMonday = allHarvestTimeEntries.map((oneTimeEntry)=>{
-
+      console.log(oneTimeEntry, 'OneTimeEntry <--------');
       // Filter out required information, to communicate with Monday.com
       const mondayTimeEntry = {
         timeEntryId: oneTimeEntry.id,
@@ -156,7 +156,7 @@ module.exports = {
 
     next()
   },
-  replaceSubmitterNameWithEmail: async (req, res, next) => {
+  addEmailAndIdToTimeEntry: async (req, res, next) => {
     // Users{} from Monday.com, contain Email and Id properties 
     let mondayUserEmailIdObjects = res.locals.allMondayUsersContainer
     // TimeEntries{} from Harvest, contain properties formatted in a previous function - thus unique names

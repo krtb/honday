@@ -1,21 +1,85 @@
 /* HTTP CLIENT */ 
 const axios = require('axios');
 
-/* MONADY.COM ROUTES */ 
-const mondayURL = process.env.MONDAY_APIV2_URL;
+/* MONDAY.COM CREDENTIALS */
 let devMondayBoardID = Number(process.env.MONDAY_BOARD_KURT_ID);
 
-module.exports = {
-  updateExistingProjectsOrCreate: (req, res, next) => {
-    // TODO: call Monday Board to find existing projects in rows.
-    console.log( 'updateExistingProjectsOrCreate started');
-    // container of all current project codes in Monday.com
-    let myCurrentProjectCodes = [];
-    // List of project codes that exist in Monday.com
-    let arrayOfExistingMondayProjects = [];
-    // List of filtered Harvest projects
-    let arrayOfHarvestProjectsToUpdate = [];
+/* MONDAY.COM v2 API ENDPOINT */ 
+const mondayURL = process.env.MONDAY_APIV2_URL;
 
+module.exports = {
+  getBoardColumnValues: async (req, res, next) => {
+    let query = `query {boards (ids: 2168123540) {
+      items () {
+        id
+        name
+        column_values {
+          id
+          title
+          value
+          text
+        }
+      }
+    } }`;
+
+    axios.post(`https://api.monday.com/v2`, {
+      'query': query,
+      }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization' : `${process.env.MONDAY_APIV2_TOKEN_KURT}`
+      },
+      })
+   .then((response) => {
+     let findColumnValues = response.data.data.boards[0].items
+     
+      let onlyColumnValues = findColumnValues.map((singleObject) => singleObject.column_values)
+
+      console.log(onlyColumnValues, 'onlyColumnValues');
+   })
+   .catch((error)=>{
+     console.log('There was an error here: ' + error);
+   })
+
+  },
+  getAllUsersToFilterIDs: async (req, res, next) => {
+    let allMondayUsersContainer = [];
+    let query = "query { users { email id } }"
+
+    await axios.post("https://api.monday.com/v2",  {
+      'query': query,
+    }, {
+        headers: {
+          'Content-Type': `application/json`,
+          'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
+        },
+    }
+    ).then((response)=>{
+      let allUsersWithEmailAndId = response.data.data.users
+      allUsersWithEmailAndId.map((singleMondayUser)=>{
+        allMondayUsersContainer.push(singleMondayUser)
+      })
+      res.locals.allMondayUsersContainer = allMondayUsersContainer
+      next()
+      // console.log(allMondayUsersContainer, 'allMondayUsersContainer');
+    }).catch((error)=>{
+      console.log('Here is my error:' + error, 'error');
+    })
+  },
+  compareExisitingAndNewProjectUserAssignments: (req, res, next) => {
+
+    console.log( 'compareExisitingAndNewProjectUserAssignments started');
+
+    // Container of all current project codes in Monday.com
+    let myExistingTimeEntries = [];
+
+    // List of timeEntry codes that exist in Monday.com
+    let arrayOfExistingMondayTimeEntries = [];
+
+    // List of filtered Harvest TimeEntries to be Created in Monday.com
+    let arrayOfHarvestTimeEntriesToCreate = [];
+
+    // Construct GraqphQl Quuery, to be consumed by Axios request to Monday.com
     let queryToViewAllItemsOnBoard = `{
       boards (ids: ${devMondayBoardID}) {
         items {
@@ -33,6 +97,9 @@ module.exports = {
     // Note: Purposely not implementing try/catch outside of callbacks
     // https://nodejs.org/en/knowledge/errors/what-is-try-catch/
 
+    // TODO: Rewrite this api request
+    
+    // Request all Column Values from Monday.com board
     axios.post(mondayURL, {
       'query':queryToViewAllItemsOnBoard,
     }, {
@@ -43,66 +110,78 @@ module.exports = {
     })
     .then((response) => {
 
-      // Map into object items, pull out laste updated date, and project code
+      // Find Each Time Entry ID which exists on Monday.com
       let column_values = response.data.data.boards[0].items
+
+      console.log(column_values, 'column_values <--------------');
 
       column_values.map( (singleItem) => {
 
+        // Map over Column Values
         singleItem.column_values.map((oneItem)=>{
 
-          if(oneItem.title === 'PS Object ID'){
+          // If the title of an Item, is equal to Time Entry ID
+          if(oneItem.title === 'Time Entry ID'){
+
+            // Collect each Time Entry ID that exists in Monday.com
+            let eachTimeEntryOnBoard = oneItem.value
+
             // TODO: Change the below as it is only replacing double quotes with single quotes
-            let eachProjectCode = oneItem.value.replace(/['"]+/g, '')
-            // convert strings to number primitive & push to array declared above
-            myCurrentProjectCodes.push( eachProjectCode )
+            // .replace(/['"]+/g, '')
+
+            // Convert strings to number primitive & push to array declared above
+            // To then have an array of TimeEntryIds which currently exist in Monday.com
+
+            myExistingTimeEntries.push( eachTimeEntryOnBoard )
           }
 
         })
 
       })
 
-      // Map over each projet code obtaibed from existing line items with the function above.
-      myCurrentProjectCodes.map((mondayProjectCode)=>{
-        // Pull out data stored locally, a list of specific projects and users = [{},{}]
-        let harvestProjectCodes = res.locals.filteredUserProjectArrays
+      // Map over each time entry code, which currently exists in Monday.com
+      myExistingTimeEntries.map((mondayTimeEntry)=>{
+
+        // Access an Array[] which contains TimeEntries with Email and MondayID Added.
+        let harvestTimeEntriesContainer = res.locals.filteredTimeEntryObjectsForMondayWithUserEmail
        
-        // Below function checks if the new project codes from harvest already exist
-        harvestProjectCodes.map((singleHarvestProject) =>{
-          
-          if(singleHarvestProject.projectCode === mondayProjectCode){
-            arrayOfExistingMondayProjects.push(singleHarvestProject)
+        // Map over a single harvesTimeEntry
+        harvestTimeEntriesContainer.map((harvesTimeEntry) =>{
+
+          // If a new harvestTimeEntryId is equal to an existing mondayTimeEntry ID 
+          // (Note: which was pulled from Harvest)
+          // Then push this harvestTimeEntryId we identified to our duplicated item list, arrayOfExistingMondayTimeEntries
+
+          if(harvesTimeEntry.timeEntryId === mondayTimeEntry){
+
+            arrayOfExistingMondayTimeEntries.push(harvesTimeEntry)
+
           } else {
-            arrayOfHarvestProjectsToUpdate.push(singleHarvestProject)
+
+            // Else, push the harvestTimeEntryId to our creation list, arrayOfHarvestTimeEntriesToCreate
+            arrayOfHarvestTimeEntriesToCreate.push(harvesTimeEntry)
           }
         })
 
+        res.locals.arrayOfHarvestTimeEntriesToCreate = arrayOfHarvestTimeEntriesToCreate;
+        res.locals.arrayOfExistingMondayTimeEntries = arrayOfExistingMondayTimeEntries;
+        return next()
       })
-
-      // TODO: set 2 lists of Update and Existing in res.locals,
-      // THEN: Create new project rows
-      // THEN: PATCH/PUT Existing project information, examples would be TimeSheet object for hours changing
-      // console.log(arrayOfHarvestProjectsToUpdate, arrayOfExistingMondayProjects, '<------ arrayOfExistingMondayProjects/arrayOfHarvestProjectsToUpdate');
 
     }).catch((error)=>{
       console.error(`The following ERRORS occurred:` + error)
     })
 
   },
-  sendHarvestDataToMondayApp: function (req, res, next) {
-    let harvestObjectForMonday = res.locals.harvestObjectForMonday;
-    let dateOfToday = new Date().toJSON().slice(0,10).replace(/-/g,'-');
-
-    //TODO: update to send multiple entries at once,
-    // will need to update all boards, with all projects,
-    // that have a new updated_at value in their object.
-
-    // below uses graphql variables
-    let queryToCreateContent = `
-      mutation (
-      $myItemName: String!,
-      $boardId: Int!,
-      $column_values: JSON!)
-      {
+  sendNewHarvestDataToMondayApp: async (req, res, next) => {
+    // let dateOfToday = new Date().toJSON().slice(0,10).replace(/-/g,'-');
+    // Array[] of new TimeEntries to create, after being filtered in above function
+    let harvestObjectForMonday = res.locals.arrayOfHarvestTimeEntriesToCreate;
+    console.log(harvestObjectForMonday, 'harvestObjectForMonday - 1');
+    
+    // Construct GraphQl query, for Monday.com to consume when Creating New TimeEntry Items
+    // First part of Axios request
+    let queryToCreateContent = `mutation ( $myItemName: String!, $boardId: Int!, $column_values: JSON!) {
       create_item(
           board_id: $boardId,
           item_name: $myItemName,
@@ -110,42 +189,74 @@ module.exports = {
           column_values: $column_values
       )
       {id}
+    }`;
+
+    // Array[] of harvestTimeEntry objects
+    // Loop through to createing objects fith columne fields for Monday.com
+    // Second part of Axios Request
+    let mondayObjects = harvestObjectForMonday.map((singleHarvestObject)=>{
+      console.log(singleHarvestObject, 'singleHarvestObject - 2 ');
+
+      let variablesForCreatingContent = {
+        // https://api.developer.monday.com/docs/guide-to-changing-column-data
+        "myItemName": singleHarvestObject.submitter,
+        "boardId": devMondayBoardID,
+        "column_values": JSON.stringify({
+          "numbers": singleHarvestObject.timeEntryId,
+          "date4": singleHarvestObject.dateSubmitted,
+          "person": {"personsAndTeams":[{"id":`${singleHarvestObject.submitterId}`,"kind":"person"}]},
+          "numbers": singleHarvestObject.submitterId,
+          "text": `${singleHarvestObject.billableBoolean.toString()}`,
+          "text2": {"text": singleHarvestObject.client},
+          "text6": singleHarvestObject.projectName,
+          "text20": singleHarvestObject.projectCode,
+          "text8": singleHarvestObject.projectNotes,
+          "numbers7": singleHarvestObject.hours,
+          "text0": singleHarvestObject.task,
+          // "status9": "Sessions",
+          })
       }
-    `;
 
-    let isBillableBoolean = harvestObjectForMonday.projectIsBillableBoolean;
-    let isBillableString = isBillableBoolean.toString()
-    let variablesForCreatingContent = {
-      // https://api.developer.monday.com/docs/guide-to-changing-column-data
-      "myItemName": "action item test copy",
-      "boardId": Number(process.env.MONDAY_BOARD_KURT_ID),
-      "column_values": JSON.stringify({
-        "text": harvestObjectForMonday.projectPSNumber,
-        "person": {"personsAndTeams":[{"id":25526553,"kind":"person"}]},
-        "date4": dateOfToday,
-        "status9": "Sessions",
-        "numbers": 40,
-        "long_text": harvestObjectForMonday.projectNotes,
+      return variablesForCreatingContent
+    })
 
-        "check": {"checked" : isBillableString}
-      })
+    console.log(mondayObjects, 'mondayObjects - 3');
+    // Start of logic for loadAPIRequestsWithDelayTimer()  ------------------------------------------------------------------------------------<
+
+    // Returns a Promise that resolves after "ms" Milliseconds
+    const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
+
+    // TODO: Replace harvestUserIdCollection variable with new var 
+    async function loadAPIRequestsWithDelayTimer() { // We need to wrap the loop in a asynchronus function for this to work
+      console.log('Your Harvest copllection of User IDs is this long: ' + mondayObjects.length );
+
+      for (var i = 0; i < mondayObjects.length - 1; mondayObjects[i++]) {
+        
+        axios.post(mondayURL, {
+          'query':queryToCreateContent,
+          'variables': JSON.stringify(mondayObjects[i])
+        }, {
+            headers: {
+              'Content-Type': `application/json`,
+              'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
+            },
+        })
+        .then((response)=>{
+          console.log(response, '<--- Requests ok');
+        })
+        .catch((error)=> 'There was an error here: ' + error)
+
+        // When the engine reaches the await part, it sets a timeout and halts the execution of the async function.
+        await timer(1000); // Then the created Promise can be awaited
+        // Finally the timeout completes & execution continues at this point. 
+      }
     }
 
-      axios.post(mondayURL, {
-          'query':queryToCreateContent,
-          'variables': JSON.stringify(variablesForCreatingContent)
-      }, {
-          headers: {
-            'Content-Type': `application/json`,
-            'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
-          },
-      })
-      .then((response) => {
-          return next(response)
-      })
-      .catch((error) => {
-        console.error(`The following ERRORS occurred:` + error);
-      });
+    loadAPIRequestsWithDelayTimer()
+    // End of logic for loadAPIRequestsWithDelayTimer()  ------------------------------------------------------------------------------------<
+
+    console.log('=============== Creating Items Complete! ================');
+
   },
   deleteAllDataFromAProject: async (req, res, next) => {
     let query = "mutation { delete_item (item_id: 12345678) { id }}";

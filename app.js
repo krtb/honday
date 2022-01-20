@@ -23,10 +23,10 @@ const {
 } = require('./middleware/harvestMiddleware');
 
 const { 
-  getBoardColumnValues,
   compareExisitingAndNewProjectUserAssignments, 
   getAllUsersToFilterIDs,
   sendNewHarvestDataToMondayApp, 
+  getBoardColumnValues,
 } = require('./middleware/mondayMiddleware');
 
 //See here for config options ==> http://expressjs.com/en/starter/static-files.html
@@ -34,21 +34,23 @@ app.use('/static', express.static(path.join(__dirname, 'dist/index.html')));
 
 /* Time Entry Requests */
 
-// Monday.com API
+// ===> Monday.com API
+// Note: Below function to check board value ids, needed for POST
+// app.use(getBoardColumnValues)
 app.use(getAllUsersToFilterIDs)
 
-// Harvest API
+// ===> Harvest API
 app.use(getAllTimeEntries);
 app.use(buildTimeEntriesForMondayBoard);
 app.use(addEmailAndIdToTimeEntry);
 
-// Monday.com API
+// ===> Monday.com API
 app.use(compareExisitingAndNewProjectUserAssignments);
 app.use(sendNewHarvestDataToMondayApp)
 
 /* Hours Worked Requests */
 
-
+/* Comment Back in When Hosting Plan Solved */
 // app.use((req, res, next)=>{
 
 //   let cronIsScheduled = true;

@@ -16,82 +16,111 @@ const devTwilioNumber = process.env.DEV_TWILIO_NUMBER;
 const devNumberToContact = process.env.DEV_PERSONAL_NUMBER;
 
 /* MIDDLEWARE */
-const { getProjectByID } = require('./middleware/harvestMiddleware');
-const { prepareHarvestDataForMondayApp, sendHarvestDataToMondayApp } = require('./middleware/mondayMiddleware');
+const {
+  getAllTimeEntries,
+  buildTimeEntriesForMondayBoard,
+  addEmailAndIdToTimeEntry,
+} = require('./middleware/harvestMiddleware');
+
+const { 
+  compareExisitingAndNewProjectUserAssignments, 
+  getAllUsersToFilterIDs,
+  sendNewHarvestDataToMondayApp, 
+  getBoardColumnValues,
+} = require('./middleware/mondayMiddleware');
 
 //See here for config options ==> http://expressjs.com/en/starter/static-files.html
 app.use('/static', express.static(path.join(__dirname, 'dist/index.html')));
 
-app.use((req, res, next)=>{
+/* Time Entry Requests */
 
-  let cronIsScheduled = true;
+// ===> Monday.com API
+// Note: Below function to check board value ids, needed for POST
+// app.use(getBoardColumnValues)
+app.use(getAllUsersToFilterIDs)
 
-  try {
+// ===> Harvest API
+app.use(getAllTimeEntries);
+app.use(buildTimeEntriesForMondayBoard);
+app.use(addEmailAndIdToTimeEntry);
+
+// ===> Monday.com API
+app.use(compareExisitingAndNewProjectUserAssignments);
+app.use(sendNewHarvestDataToMondayApp)
+
+/* Hours Worked Requests */
+
+/* Comment Back in When Hosting Plan Solved */
+// app.use((req, res, next)=>{
+
+//   let cronIsScheduled = true;
+
+//   try {
     
-    if(cronIsScheduled === true){
+//     if(cronIsScheduled === true){
     
-    const job = cron.schedule('30 0-59 * * * *', () => {
-      //TODO: '0 0 0 * * *' === run every day at 12:00 AM
-      console.log('---------------------');
-      console.log('Honday Bot sending data ... ');
+//     const job = cron.schedule('30 0-59 * * * *', () => {
+//       //TODO: '0 0 0 * * *' === run every day at 12:00 AM
+//       console.log('---------------------');
+//       console.log('Honday Bot sending data ... ');
           
-      /* Harvest API */
-      app.use(getProjectByID)
+//       /* Harvest API */
+//       app.use(getProjectByID)
 
-      /* Monday.com API w/GrapQL */
-      app.use(prepareHarvestDataForMondayApp)
-      app.use(sendHarvestDataToMondayApp)
+//       /* Monday.com API w/GrapQL */
+//       app.use(prepareHarvestDataForMondayApp)
+//       app.use(sendHarvestDataToMondayApp)
       
-      return next()
+//       return next()
 
-      },{
-        /* exposing properties for clarity */ 
-        scheduled: true,
-        timezone: 'America/New_York'
-      }
+//       },{
+//         /* exposing properties for clarity */ 
+//         scheduled: true,
+//         timezone: 'America/New_York'
+//       }
       
-      );
+//       );
       
-      job.start()
-      return next()
-    }
-  } catch (error) {
+//       job.start()
+//       return next()
+//     }
+//   } catch (error) {
 
-    console.log('Honday Bot is buggin out ...');
-    client.messages
-    .create({
-        body: 'Honday Bot ran into an error when syncing projects.',
-        from: devTwilioNumber,
-        to: devNumberToContact
-      }, (error, message) => {
+//     console.log('Honday Bot is buggin out ...');
+//     client.messages
+//     .create({
+//         body: 'Honday Bot ran into an error when syncing projects.',
+//         from: devTwilioNumber,
+//         to: devNumberToContact
+//       }, (error, message) => {
 
-        if (!error) {
+//         if (!error) {
 
-          console.log('Honday Bot texted a human for help ...');
+//           console.log('Honday Bot texted a human for help ...');
 
-          // SID info ==> https://support.twilio.com/hc/en-us/articles/223134387-What-is-a-Message-SID-
-          console.log('Text Sent! SID  for this SMS message is:');
-          console.log(message.sid);
+//           // SID info ==> https://support.twilio.com/hc/en-us/articles/223134387-What-is-a-Message-SID-
+//           console.log('Text Sent! SID  for this SMS message is:');
+//           console.log(message.sid);
   
-          console.log('Message sent on:');
-          console.log(message.dateCreated);
+//           console.log('Message sent on:');
+//           console.log(message.dateCreated);
 
-        } else {
+//         } else {
 
-          console.log('Twilio error, please see below ...');
-          console.log(error);
+//           console.log('Twilio error, please see below ...');
+//           console.log(error);
 
-        }
+//         }
 
-      }
-    )
-    .then(message => console.log(message.sid));
+//       }
+//     )
+//     .then(message => console.log(message.sid));
 
-    /* display error message json on localhost page */
-    res.json(error.message)
-  }
+//     /* display error message json on localhost page */
+//     res.json(error.message)
+//   }
 
-})
+// })
 
 /* Routes */
 app.get('/', (req, res, next) => {
@@ -102,5 +131,5 @@ app.get('/', (req, res, next) => {
 
 /* Log Port To Terminal */
 app.listen(port, () => {
-console.log(`Honday Bot working at http://localhost:${port}`)
+console.log(`HondayBot online at http://localhost:${port}`)
 })

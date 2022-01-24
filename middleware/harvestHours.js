@@ -113,10 +113,9 @@ module.exports={
       await timer(1000)
       // Remove nested arrays 
       let flatProjectBudgets = projectBudgetsForMonday.flat()
-      // //TODO: currently filtering on name, try to use psc-code
 
       for (let index = 0; index <= flatProjectBudgets.length - 1; index++) {
-        //TODO: Matching with ProjectIds does not result in any data returned.
+        //TODO: Matching with ProjectIds does not result in any data returned. Currently matches with client_name which is unique
         // Only by matching on Project Name, do 10 items get returned, with 1 dupelicate.
         // Project Ids and Project Budget Project_Id do not match
         // Project Name is not the Client- Project is `Quick Start for Web - Enterprise` general bucket, with unique client names

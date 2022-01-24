@@ -2,46 +2,12 @@
 const axios = require('axios');
 
 /* MONDAY.COM CREDENTIALS */
-let devMondayBoardID = Number(process.env.MONDAY_BOARD_KURT_ID);
+let devMondayBoardID = Number(process.env.DEV_MONDAY_TIME_ENTRIES);
 
 /* MONDAY.COM v2 API ENDPOINT */ 
 const mondayURL = process.env.MONDAY_APIV2_URL;
 
 module.exports = {
-  getBoardColumnValues: async (req, res, next) => {
-    let query = `query {boards (ids: 2166109852) {
-      items () {
-        id
-        name
-        column_values {
-          id
-          title
-          value
-          text
-        }
-      }
-    } }`;
-
-    axios.post(`https://api.monday.com/v2`, {
-      'query': query,
-      }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization' : `${process.env.MONDAY_APIV2_TOKEN_KURT}`
-      },
-      })
-   .then((response) => {
-     let findColumnValues = response.data.data.boards[0].items
-     
-      let onlyColumnValues = findColumnValues.map((singleObject) => singleObject.column_values)
-
-      console.log(onlyColumnValues, 'onlyColumnValues');
-   })
-   .catch((error)=>{
-     console.log('There was an error here: ' + error);
-   })
-
-  },
   getAllUsersToFilterIDs: async (req, res, next) => {
     let allMondayUsersContainer = [];
     let query = "query { users { email id } }"
@@ -70,7 +36,9 @@ module.exports = {
     })
   },
   compareExisitingAndNewProjectUserAssignments: async (req, res, next) => {
-
+    let harvestTimeEntriesContainer = res.locals.filteredTimeEntryObjectsForMondayWithUserEmail
+    // console.log('Your Harvest collection of User IDs is this long: ' + harvestTimeEntriesContainer.length );
+    let myExistingTimeEntryIds = []
     let queryToViewAllItemsOnBoard = `{
       boards (ids: ${devMondayBoardID}) {
         items {
@@ -85,8 +53,6 @@ module.exports = {
       }
     }`;
 
-    let harvestTimeEntriesContainer = res.locals.filteredTimeEntryObjectsForMondayWithUserEmail
-    console.log('Your Harvest collection of User IDs is this long: ' + harvestTimeEntriesContainer.length );
     // Note: Purposely not implementing try/catch outside of callbacks
     // https://nodejs.org/en/knowledge/errors/what-is-try-catch/
 
@@ -101,7 +67,37 @@ module.exports = {
     })
     .then((response) => {
       // Find Each Time Entry ID which exists on Monday.com
-      let column_values = response.data.data.boards[0].items
+      // Array[] of Objects{}
+      let mondayRows = response.data.data.boards[0].items
+
+      myExistingTimeEntryIds = mondayRows.map((aRow)=>{
+        // console.log(aRow.column_values[0].title, '<-------------- A ROW HERE');
+        if(aRow.column_values[0].title === 'Time Entry ID'){
+          // Remove double quotes, leave string wrapped in single quotes
+          return aRow.column_values[0].value.replace(/["']/g, "")
+        }
+      })
+      
+      // console.log(myExistingTimeEntryIds, myExistingTimeEntryIds.length, '<-----------------');
+      // let exisitingEntriesToPATCH = []
+      // let newEntriesToCreate = []
+
+      // harvestTimeEntriesContainer.map((singleNewTimeEntry)=>{
+      //   myExistingTimeEntryIds.map((existingTimeEntry)=>{
+      //     if(existingTimeEntry === singleNewTimeEntry.timeEntryId){
+      //       exisitingEntriesToPATCH.push(singleNewTimeEntry)
+      //     } else {
+      //       newEntriesToCreate.push(singleNewTimeEntry)
+      //     }
+      //   })
+      // })
+      // console.log(exisitingEntriesToPATCH.length, newEntriesToCreate.length, '<------------ check here');
+      // harvestTimeEntriesContainer.filter((singleValue)=>{
+      //   // console.log(singleValue, 'singleValue');
+      //   return singleValue.timeEntryId === myExistingTimeEntryIds
+      // })
+
+
       if (column_values.length > 0) {
 
         console.log('time entries exist!', column_values);
@@ -113,7 +109,6 @@ module.exports = {
 
         let onlyUniqueEntries = harvestTimeEntriesContainer.filter(o1 => existingTimeEntryIdStrings.some(o2 => o1.timeEntryId !== o2? o1 : null));
         console.log(onlyUniqueEntries, `Here is a count of my time entries to update: ${onlyUniqueEntries.length}`);
-
         res.locals.arrayOfHarvestTimeEntriesToCreate = onlyUniqueEntries;
         next()
       } else {
@@ -213,20 +208,4 @@ module.exports = {
     console.log('=============== Creating Items Complete! ================');
 
   },
-  deleteAllDataFromAProject: async (req, res, next) => {
-    let query = "mutation { delete_item (item_id: 12345678) { id }}";
-
-    axios.get(mondayURL, {
-      method: 'post',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization' : `${process.env.MONDAY_APIV2_TOKEN_KURT}`
-      },
-      body: JSON.stringify({
-        query : query
-      })
-    })
-    .then(res => res.json())
-    .then(res => console.log(JSON.stringify(res, null, 2)));
-  }
 }

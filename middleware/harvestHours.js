@@ -89,7 +89,10 @@ module.exports={
     // End of logic for loadAPIRequestsWithDelayTimer()  <------------------------------------------------------------------------------------
   },
   getProjectBudgetReports: async (req, res, next)=>{
-    // This function accesses filteres values from Monday, that were stored locally
+    // This function uses filtered Projects based on Monday existing values
+    // Then compares with Project Budgert client names
+    // Finally stores locally to send PATCH request to Monday.com in updateMondayHours();
+    
     let pullharvestProjectIds = res.locals.pullharvestProjectIds
     let harvestProjectsForMonday = res.locals.harvestProjectsForMonday
     let getMondayProjectPsNames = res.locals.getMondayProjectPsNames

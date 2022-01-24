@@ -14,14 +14,12 @@ const axiosConfigObject = {
 }
 
 module.exports={
-  findHarvestClientByName: async (req, res, next)=> {
+  findHarvestProjectByPsCode: async (req, res, next)=> {
     // This function accesses PS-Code strings, from existing Monday.com board Projects
     let mondayProjectPsCodes = res.locals.getMondayProjectPsCodes;
-    // Request first page, to get a total_pages count
     let startOnPage = 1;
     let storeAllProjects = []
-
-    console.log(`============ Using ${mondayProjectPsCodes.length} PS-Codes from Monday to match in Harvest ============`)
+    console.log(`============ finding ${mondayProjectPsCodes.length}  harvest Clients by name ============`)
     // <------------------------------------------------------------------------------------------------------------------------------
     // Returns a Promise that resolves after Milliseconds
     const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
@@ -97,7 +95,8 @@ module.exports={
     let getMondayProjectPsNames = res.locals.getMondayProjectPsNames
     // Container variables
     let projectBudgetsForMonday = [];
-    let filteredProjectBudgets = [];
+    let matchedProjectBudgetsForMonday = []
+
     // <------------------------------------------------------------------------------------------------------------------------------
     // Returns a Promise that resolves after Milliseconds
     const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
@@ -114,16 +113,15 @@ module.exports={
       await timer(1000)
       // Remove nested arrays 
       let flatProjectBudgets = projectBudgetsForMonday.flat()
+      // //TODO: currently filtering on name, try to use psc-code
 
-      // Filter and return only the Client Ids for each Project Budget
-      // flatProjectBudgets.map(e => console.log(e.client_name))
-      // harvestProjectClientIds = harvestProjectsForMonday.map((singleItem)=> {
-      //   return singleItem.client.id
-      // })
-
-      // While there are Project Budgets, filter based on Existing Monday board project names, and project budget names
-      let matchedProjectBudgetsForMonday = []
       for (let index = 0; index <= flatProjectBudgets.length - 1; index++) {
+        //TODO: Matching with ProjectIds does not result in any data returned.
+        // Only by matching on Project Name, do 10 items get returned, with 1 dupelicate.
+        // Project Ids and Project Budget Project_Id do not match
+        // Project Name is not the Client- Project is `Quick Start for Web - Enterprise` general bucket, with unique client names
+        // project_id: 28416027,
+        // project_name: 'Quick Start for Web - Enterprise',
         getMondayProjectPsNames.filter((getMondayProjectPsNames) => getMondayProjectPsNames === flatProjectBudgets[index].client_name? matchedProjectBudgetsForMonday.push(flatProjectBudgets[index]) : null)
       }
 

@@ -86,14 +86,23 @@ module.exports ={
     })
     .then((response) => {
       // Filter columns with Project Names as a property
-      getMondayBoardProjects = response.data.data.boards[0].items
+      let getMondayBoardProjects = response.data.data.boards[0].items
       // Loop through and filter on Project Name values
       let mondayBoardProjectNames = getMondayBoardProjects.map((singleObjects)=>{
         // TODO: May have to change column value, as I moved the "Project column"
         return singleObjects.name
       })
 
-      console.log(`Grabbing ${ getMondayBoardProjects.length} Projects from Roll-Up Board`);
+      console.log(`Grabbing ${ mondayBoardProjectNames.length} Projects from Roll-Up Board`);
+      // Data schema below
+      //   },
+      //   {
+      //     id: 'harvest_id_number',
+      //     name: 'ConsejoSano',
+      //     column_values: [objects]
+      //   }
+      // ]
+
       // Store Locally
       res.locals.getMondayProjectPsNames = mondayBoardProjectNames
       next()
@@ -103,7 +112,9 @@ module.exports ={
     })
   },
   getExistingMondayBoardValues: async(req, res, next)=>{
-    //TODO: function appears to be a duplicate of the above.
+    //This function cycles through Project Objects from Mondday.com
+    // Then it stores the entire object as ID and Name will be needed in other functions
+    // Note ID here is from Monday.com items, used in GrapqQl request
 
     let query = `query {boards (ids: ${DEV_MONDAY_BOARD_HOURS}) {
       items () {
@@ -128,15 +139,13 @@ module.exports ={
     },
     })
     .then((response) => {
-      getMondayBoardProjects = response.data.data.boards[0].items
-      console.log(getMondayBoardProjects, getMondayBoardProjects.length);
-
+      let getMondayBoardProjects = response.data.data.boards[0].items
+      // Loop through and store entire Monday project
       let mondayProjectObjects = getMondayBoardProjects.map((singleObjects)=>{
         // TODO: May have to change column value, as I moved the "Project column"
         return singleObjects
       })
-
-      console.log(`Grabbing ${ mondayProjectObjects.length} Monday Ids from Roll-Up Board`);
+      console.log(`Store Project Objects from Monday. ${mondayProjectObjects.length} Monday.com Objects from Roll-Up Board`);
       res.locals.mondayProjectObjects = mondayProjectObjects
       next()
     })
@@ -145,7 +154,7 @@ module.exports ={
     })
 
   },
-  updateMondayHours: async (req, res, next) =>{
+  updateMondayHours: async (req, res, next) => {
     // This function accesses locally stored object collections.
     // Then it builds a custom Object
     // Finally the custom object is looped over and updates to Hours column in Monday.com board are made.
@@ -235,7 +244,7 @@ module.exports ={
           console.log(response.data, '<--- Requests ok');
         })
         .catch((error)=> 'There was an error here: ' + error)
-
+      
         // When the engine reaches the await part, it sets a timeout and halts the execution of the async function.
         await timer(1000); // Then the created Promise can be awaited
         // Finally the timeout completes & execution continues at this point. 

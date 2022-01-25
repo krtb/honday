@@ -23,8 +23,8 @@ module.exports = {
     ).then((response)=>{
       let allUsersWithEmailAndId = response.data.data.users
 
+      // Store in outer level variable
       allUsersWithEmailAndId.map((singleMondayUser)=>{
-        // console.log(singleMondayUser, 'singleMondayUser <---------------------------------');
         allMondayUsersContainer.push(singleMondayUser)
       })
 

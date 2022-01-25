@@ -77,9 +77,7 @@ module.exports = {
             fith: 'PS-004575',
           };
 
-          // arrayOfTimeEntryObjects.filter((aTimeEntry)=> filterValues.map(aValue => aValue.))
-
-          //TODO: Remove Double Map
+          // TODO: Look into alternatives for comparing two arrays and mutating data.
           arrayOfTimeEntryObjects.map((item) => {
 
             Object.values(filterValues).map((specifiedProjectCode)=>{

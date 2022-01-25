@@ -20,13 +20,13 @@ const {
   getAllTimeEntries,
   buildTimeEntriesForMondayBoard,
   addEmailAndIdToTimeEntry,
-} = require('./middleware/harvestMiddleware');
+} = require('./middleware/harvestTimeEntries');
 
 const { 
   compareExisitingAndNewProjectUserAssignments, 
   getAllUsersToFilterIDs,
   sendNewHarvestDataToMondayApp, 
-} = require('./middleware/mondayMiddleware');
+} = require('./middleware/mondayTimeEntries');
 
 /* Project Roll-Up Board, Hours */
 const {
@@ -46,29 +46,27 @@ const {
 //See here for config options ==> http://expressjs.com/en/starter/static-files.html
 app.use('/static', express.static(path.join(__dirname, 'dist/index.html')));
 
-/*================ Time Entry Requests ================*/
+/*================ Time Entry Section ================*/
 
-//---------------- Harvest API
+//----------------> Harvest API
 app.use(getAllUsersToFilterIDs)
 app.use(getAllTimeEntries);
 app.use(buildTimeEntriesForMondayBoard);
 app.use(addEmailAndIdToTimeEntry);
-
-// // ===> Monday.com API
+//----------------> Monday.com API
 app.use(compareExisitingAndNewProjectUserAssignments);
 app.use(sendNewHarvestDataToMondayApp)
 
-/*================ Hours Worked Requests ================*/
+/*================ Actual_Hours Section ================*/
 
-//---------------- Monday API
+//----------------> Monday API
 app.use(getProjectPsCodesMonday)
 app.use(getProjectNamesMonday)
 app.use(getExistingMondayBoardValues)
-// Harvest API
+//----------------> Harvest API
 app.use(findHarvestProjectByPsCode)
-// app.use(findTimeEntriesByProjectId) NOT USING
 app.use(getProjectBudgetReports)
-// Monday.com
+//----------------> Monday.com
 app.use(updateMondayHours)
 
 /* Comment Back in When Hosting Plan Solved */

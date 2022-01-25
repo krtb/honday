@@ -5,23 +5,7 @@ const axios = require('axios');
 const HARVEST_ACCOUNT_ID = process.env.HARVEST_ACCOUNT_ID;
 const HARVEST_ACCESS_TOKEN = process.env.HARVEST_ACCESS_TOKEN;
 
-/* HARVEST ENDPOINTS */
-const getProjectsEndpoint = `/v2/projects`;
-const getAllAssignedTasksEndpoint = `/v2/task_assignments`;
-const getAllUserAssignmentsEndpoint =  `/v2/user_assignments`;
-const getSingleProjectEndpoint = `/v2/projects/`;
-const getTimeEntriesEndpoint = `/v2/time_entries`;
-
-/* HARVEST API URL CONSTRUCTION */
-const getProjectsFromHarvestUrl = process.env.HARVEST_URL + getProjectsEndpoint;
-const getAaEmailAndIdFromMondayFromHarvestUrl = process.env.HARVEST_URL + getTimeEntriesEndpoint;
-const getAllAssignedTasksFromHarvestUrl = process.env.HARVEST_URL + getAllAssignedTasksEndpoint;
-const getASingleProjectFromHarvestUrl = process.env.HARVEST_URL + getSingleProjectEndpoint;
-const getProjectUserAssignmentsUrl = process.env.HARVEST_URL + getAllUserAssignmentsEndpoint;
-
 /* GLOBAL VARIABLES & UTILS */
-const currentProjectID = Number(process.env.DEV_HARVEST_PROJECT_ID);
-const arrayOfProjectIds = currentProjectID;
 const axiosConfigObject = {
   // TODO: Add UserAgent attribute required by harvest, review if axios sending by default
   headers: {

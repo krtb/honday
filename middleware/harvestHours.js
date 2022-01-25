@@ -5,6 +5,7 @@ const axios = require('axios');
 const HARVEST_ACCOUNT_ID = process.env.HARVEST_ACCOUNT_ID;
 const HARVEST_ACCESS_TOKEN = process.env.HARVEST_ACCESS_TOKEN;
 
+/* GLOBAL VARIABLES & UTILS */
 const axiosConfigObject = {
   // TODO: Add UserAgent attribute required by harvest, review if axios sending by default
   headers: {
@@ -118,10 +119,12 @@ module.exports={
       let flatProjectBudgets = projectBudgetsForMonday.flat()
 
       for (let index = 0; index <= flatProjectBudgets.length - 1; index++) {
-        //TODO: Matching with ProjectIds does not result in any data returned. Currently matches with client_name which is unique
-        // Only by matching on Project Name, do 10 items get returned, with 1 dupelicate.
-        // Project Ids and Project Budget Project_Id do not match
-        // Project Name is not the Client- Project is `Quick Start for Web - Enterprise` general bucket, with unique client names
+        //TODO: Matching with ProjectIds does not return any data
+        // Currently matches with client_name
+        // Only by matching on Project Name, do 10 items get returned, with 1 duplicate.
+        // Project Ids obtained from /projects endpoint, and /Project_Budget Project_Id do not match
+        // Project Name is not the Client, Project is `Quick Start for Web - Enterprise` general bucket, with unique client names
+        // Example Below 
         // project_id: 28416027,
         // project_name: 'Quick Start for Web - Enterprise',
         getMondayProjectPsNames.filter((getMondayProjectPsNames) => getMondayProjectPsNames === flatProjectBudgets[index].client_name? matchedProjectBudgetsForMonday.push(flatProjectBudgets[index]) : null)

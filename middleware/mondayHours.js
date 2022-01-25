@@ -220,7 +220,7 @@ module.exports ={
     console.log('=========================== HARVEST MAPPED TO MONDAY GRAPHQL ===========================');
     // Start of logic for loadAPIRequestsWithDelayTimer()  ------------------------------------------------------------------------------------<
   
-    // Returns a Promise that resolves after "ms" Milliseconds
+    // Returns a Promise that resolves after Milliseconds
     const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
   
     async function loadAPIRequestsWithDelayTimer() { // We need to wrap the loop in a asynchronus function for this to work

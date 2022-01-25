@@ -102,7 +102,7 @@ module.exports = {
     
     filteredTimeEntryObjectsForMonday = allHarvestTimeEntries.map((oneTimeEntry)=>{
       // Filter out required information, to communicate with Monday.com
-      // Add cusrtom values to store additional data each object requires
+      // Add custom values to store additional data each object requires
       // Custom values are: mondayId, email
 
       const mondayTimeEntry = {

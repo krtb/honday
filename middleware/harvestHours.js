@@ -5,6 +5,7 @@ const axios = require('axios');
 const HARVEST_ACCOUNT_ID = process.env.HARVEST_ACCOUNT_ID;
 const HARVEST_ACCESS_TOKEN = process.env.HARVEST_ACCESS_TOKEN;
 
+/* GLOBAL VARIABLES & UTILS */
 const axiosConfigObject = {
   // TODO: Add UserAgent attribute required by harvest, review if axios sending by default
   headers: {

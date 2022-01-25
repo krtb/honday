@@ -5,50 +5,69 @@ const dotenv = require('dotenv');
 dotenv.config(); 
 const port = process.env.SERVER_PORT_8080;
 
-/* CRON JOB */
+/* Cron Job */
 const cron = require('node-cron');
 
-/* TWILIO */
+/* Twilio */
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = require('twilio')(accountSid, authToken);
 const devTwilioNumber = process.env.DEV_TWILIO_NUMBER;
 const devNumberToContact = process.env.DEV_PERSONAL_NUMBER;
 
-/* MIDDLEWARE */
+/* Time_Entries Board */
 const {
   getAllTimeEntries,
   buildTimeEntriesForMondayBoard,
   addEmailAndIdToTimeEntry,
-} = require('./middleware/harvestMiddleware');
+} = require('./middleware/harvestTimeEntries');
 
 const { 
   compareExisitingAndNewProjectUserAssignments, 
   getAllUsersToFilterIDs,
   sendNewHarvestDataToMondayApp, 
-  getBoardColumnValues,
-} = require('./middleware/mondayMiddleware');
+} = require('./middleware/mondayTimeEntries');
+
+/* Project Roll-Up Board, Hours */
+const {
+  getProjectPsCodesMonday,
+  getProjectNamesMonday,
+  getExistingMondayBoardValues,
+  updateMondayHours,
+  killRequests
+} = require('./middleware/mondayHours');
+
+const {
+  findHarvestProjectByPsCode,
+  findTimeEntriesByProjectId,
+  getProjectBudgetReports,
+} = require('./middleware/harvestHours');
 
 //See here for config options ==> http://expressjs.com/en/starter/static-files.html
 app.use('/static', express.static(path.join(__dirname, 'dist/index.html')));
 
-/* Time Entry Requests */
+/*================ Time Entry Section ================*/
 
-// ===> Monday.com API
-// Note: Below function to check board value ids, needed for POST
-// app.use(getBoardColumnValues)
+//----------------> Harvest API
 app.use(getAllUsersToFilterIDs)
-
-// ===> Harvest API
 app.use(getAllTimeEntries);
 app.use(buildTimeEntriesForMondayBoard);
 app.use(addEmailAndIdToTimeEntry);
-
-// ===> Monday.com API
+//----------------> Monday.com API
 app.use(compareExisitingAndNewProjectUserAssignments);
 app.use(sendNewHarvestDataToMondayApp)
 
-/* Hours Worked Requests */
+/*================ Actual_Hours Section ================*/
+
+//----------------> Monday API
+app.use(getProjectPsCodesMonday)
+app.use(getProjectNamesMonday)
+app.use(getExistingMondayBoardValues)
+//----------------> Harvest API
+app.use(findHarvestProjectByPsCode)
+app.use(getProjectBudgetReports)
+//----------------> Monday.com
+app.use(updateMondayHours)
 
 /* Comment Back in When Hosting Plan Solved */
 // app.use((req, res, next)=>{
@@ -130,6 +149,6 @@ app.get('/', (req, res, next) => {
 
 
 /* Log Port To Terminal */
-app.listen(port, () => {
+const server = app.listen(port, () => {
 console.log(`HondayBot online at http://localhost:${port}`)
 })

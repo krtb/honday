@@ -5,23 +5,7 @@ const axios = require('axios');
 const HARVEST_ACCOUNT_ID = process.env.HARVEST_ACCOUNT_ID;
 const HARVEST_ACCESS_TOKEN = process.env.HARVEST_ACCESS_TOKEN;
 
-/* HARVEST ENDPOINTS */
-const getProjectsEndpoint = `/v2/projects`;
-const getAllAssignedTasksEndpoint = `/v2/task_assignments`;
-const getAllUserAssignmentsEndpoint =  `/v2/user_assignments`;
-const getSingleProjectEndpoint = `/v2/projects/`;
-const getTimeEntriesEndpoint = `/v2/time_entries`;
-
-/* HARVEST API URL CONSTRUCTION */
-const getProjectsFromHarvestUrl = process.env.HARVEST_URL + getProjectsEndpoint;
-const getAaEmailAndIdFromMondayFromHarvestUrl = process.env.HARVEST_URL + getTimeEntriesEndpoint;
-const getAllAssignedTasksFromHarvestUrl = process.env.HARVEST_URL + getAllAssignedTasksEndpoint;
-const getASingleProjectFromHarvestUrl = process.env.HARVEST_URL + getSingleProjectEndpoint;
-const getProjectUserAssignmentsUrl = process.env.HARVEST_URL + getAllUserAssignmentsEndpoint;
-
 /* GLOBAL VARIABLES & UTILS */
-const currentProjectID = Number(process.env.DEV_HARVEST_PROJECT_ID);
-const arrayOfProjectIds = currentProjectID;
 const axiosConfigObject = {
   // TODO: Add UserAgent attribute required by harvest, review if axios sending by default
   headers: {
@@ -37,9 +21,6 @@ module.exports = {
     let startPage = 1;
     // create empty array where we want to store the userAssignments objects for each loop
     let filteredTimeEntryObjectsBySpecificProjectCode = []
-    // create a lastResult array which is going to be used to check if there is a next page
-    let lastResult = [];
-    let pageCount = 1
 
     // Returns a Promise that resolves after Milliseconds
     const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
@@ -61,16 +42,18 @@ module.exports = {
           // 100 per GET Request
           arrayOfTimeEntryObjects = data[Object.keys(data)[0]]
       })
+
+      console.log(`====== My array of arrayOfTimeEntryObjects is this long: ${arrayOfTimeEntryObjects.length} and total_pages:${totalPageCount} ======`);
       
       for (let pageCount = 1; pageCount <= totalPageCount; pageCount++) {
+        // Can view/filter per project ID, though would not be required in long wrong as will need to loop through all project time entries
         paginationUrl = `https://api.harvestapp.com/v2/time_entries?page=${pageCount}&per_page=100&ref=next&is_active=true&updated_since=2021-09-01T12:00:22Z`
-        // console.log('Page Count inside function: ' + pageCount, 'Total Page Count: ' +  totalPageCount);
 
         axios.get(paginationUrl, axiosConfigObject)
         .then((response)=>{
           arrayOfTimeEntryObjects = response.data.time_entries
 
-          var filter = {
+          var filterValues = {
             first: 'PS-12222',
             second: 'PS-11514',
             third: 'PS-004513',
@@ -78,12 +61,15 @@ module.exports = {
             fith: 'PS-004575',
           };
 
-          
+          // TODO: Look into alternatives for comparing two arrays and mutating data.
           arrayOfTimeEntryObjects.map((item) => {
-            Object.values(filter).map((specifiedProjectCode)=>{
+
+            Object.values(filterValues).map((specifiedProjectCode)=>{
+
               if(specifiedProjectCode === item.project.code){
                 filteredTimeEntryObjectsBySpecificProjectCode.push(item);
               }
+
             })
 
           });
@@ -100,7 +86,7 @@ module.exports = {
         );
       }
 
-      console.log(filteredTimeEntryObjectsBySpecificProjectCode, '============== FILTERING OF TIME ENTRIES DONE ==============');
+      console.log(`============= getAllTimeEntries function complete. Total of ${filteredTimeEntryObjectsBySpecificProjectCode.length} =============`);
       res.locals.filteredTimeEntryObjectsBySpecificProjectCode = filteredTimeEntryObjectsBySpecificProjectCode
       return next()
     }
@@ -109,12 +95,16 @@ module.exports = {
     // End of logic for loadAPIRequestsWithDelayTimer()  ------------------------------------------------------------------------------------<
   },
   buildTimeEntriesForMondayBoard: async (req, res, next) => {
-    console.log('============================================= buildTimeEntriesForMondayBoard function started =============================================');
-    // Pull stored UserProjectAssignment Objects
-    let allHarvestTimeEntries = await res.locals.filteredTimeEntryObjectsBySpecificProjectCode
+    // This function loops through filered Time Entries
+    // Then maps those objects to a custom mondayTimeEntry{}
+
+    let allHarvestTimeEntries = res.locals.filteredTimeEntryObjectsBySpecificProjectCode
     
     filteredTimeEntryObjectsForMonday = allHarvestTimeEntries.map((oneTimeEntry)=>{
       // Filter out required information, to communicate with Monday.com
+      // Add cusrtom values to store additional data each object requires
+      // Custom values are: mondayId, email
+
       const mondayTimeEntry = {
         timeEntryId: oneTimeEntry.id,
         submitterId: oneTimeEntry.user.id,
@@ -134,27 +124,19 @@ module.exports = {
       return mondayTimeEntry
     })
 
-
     // Store locally
     res.locals.filteredTimeEntryObjectsForMonday = filteredTimeEntryObjectsForMonday
-    console.log(' ======= filteredUserProjectArrays middleware complete ==========', filteredTimeEntryObjectsForMonday.length);
+    console.log(` ======= buildTimeEntriesForMondayBoard function complete, total entries: ${filteredTimeEntryObjectsForMonday.length} ==========`, );
     return next()
-
-    //TODO: Move this date object to a part of the app where it can be better used
-    // // Create date time object
-    // let dateOfToday = new Date();
-
-    // // Transform into ISO format, like this => 2022-01-04
-    // let todaysDateIsoUtcTimezone = await function ISODateString(datOfToday) {
-    //   function pad(n) {return n<10 ? '0'+n : n}
-    //   return datOfToday.getUTCFullYear()+'-'
-    //       + pad(datOfToday.getUTCMonth()+1)+'-'
-    //       + pad(datOfToday.getUTCDate())
-    // }(dateOfToday)
   },
   addEmailAndIdToTimeEntry: async (req, res, next) => {
+    // This function takes ~257 Time Entries currently, from function above.
+    // Then it filters on submittedId, oneTimeEntry.user.id from above.
+    // Next we use the submitterId to request the specified User object from Harvest.
+
     // Users{} from Monday.com, contain Email and Id properties 
     // TimeEntries{} from Harvest, contain properties formatted in a previous function - thus unique names
+
     let filteredTimeEntryObjectsForMonday = res.locals.filteredTimeEntryObjectsForMonday
     // Creates array of only Harvest User Ids, required to request specific Users, to then pull email values
     let harvestTimeEntrySubmitterIds = filteredTimeEntryObjectsForMonday.map((singleTimeEntry)=> {
@@ -162,7 +144,7 @@ module.exports = {
     })
 
     // Start of logic for loadAPIRequestsWithDelayTimer()  ------------------------------------------------------------------------------------<
-    // Returns a Promise that resolves after "ms" Milliseconds
+    // Returns a Promise that resolves after Milliseconds
     const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
     // Function below will push values to this Array[]
     let harvestUserIdNameEmail = [];
@@ -198,6 +180,7 @@ module.exports = {
         // Finally the timeout completes & execution continues at this point. 
       }
 
+      // From getAllUsersToFilterIDs() middleware function
       let mondayUserEmailIdObjects = res.locals.allMondayUsersContainer
       let holdMeTimeEntriesWithEmail = [];
       filteredTimeEntryObjectsForMonday.map((singleTimeEntry)=>{
@@ -227,7 +210,6 @@ module.exports = {
 
       res.locals.filteredTimeEntryObjectsForMondayWithUserEmail = TimeEntriesWithEmailAndMondayID
       console.log(`==================================== ${TimeEntriesWithEmailAndMondayID.length} Time Entries Updated ! ====================================`);
-      //TODO: Maybe return here?
       next()
     }
     loadAPIRequestsWithDelayTimer();

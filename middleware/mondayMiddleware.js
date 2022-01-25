@@ -68,15 +68,19 @@ module.exports = {
     .then((response) => {
       // Find Each Time Entry ID which exists on Monday.com
       // Array[] of Objects{}
-      let mondayRows = response.data.data.boards[0].items
+      let column_values = response.data.data.boards[0].items
 
-      myExistingTimeEntryIds = mondayRows.map((aRow)=>{
-        // console.log(aRow.column_values[0].title, '<-------------- A ROW HERE');
-        if(aRow.column_values[0].title === 'Time Entry ID'){
-          // Remove double quotes, leave string wrapped in single quotes
-          return aRow.column_values[0].value.replace(/["']/g, "")
-        }
-      })
+      // TODO: Finish replacing function that checks if timeEntry exists in monday.com
+      // ---------------- To Replace Below check of Monday.com values ----------------
+      // let mondayRows = response.data.data.boards[0].items
+
+      // myExistingTimeEntryIds = mondayRows.map((aRow)=>{
+      //   // console.log(aRow.column_values[0].title, '<-------------- A ROW HERE');
+      //   if(aRow.column_values[0].title === 'Time Entry ID'){
+      //     // Remove double quotes, leave string wrapped in single quotes
+      //     return aRow.column_values[0].value.replace(/["']/g, "")
+      //   }
+      // })
       
       // console.log(myExistingTimeEntryIds, myExistingTimeEntryIds.length, '<-----------------');
       // let exisitingEntriesToPATCH = []
@@ -96,7 +100,7 @@ module.exports = {
       //   // console.log(singleValue, 'singleValue');
       //   return singleValue.timeEntryId === myExistingTimeEntryIds
       // })
-
+      // ---------------- To Replace Below check of Monday.com values ----------------
 
       if (column_values.length > 0) {
 

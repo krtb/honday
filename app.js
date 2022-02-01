@@ -3,7 +3,7 @@ const app = express();
 const path = require('path');
 const dotenv = require('dotenv');
 dotenv.config(); 
-const port = process.env.SERVER_PORT_8080;
+const port = process.env.PORT || 8080;;
 
 /* Cron Job */
 const cron = require('node-cron');
@@ -149,6 +149,6 @@ app.get('/', (req, res, next) => {
 })
 
 /* Log Port To Terminal */
-app.listen(3000, (req, res, next) => {
-  console.log(`HondayBot online at http://localhost:3000`)
+app.listen(port, (req, res, next) => {
+  console.log(`HondayBot online at http://localhost:${port}`)
 })

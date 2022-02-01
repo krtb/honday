@@ -143,10 +143,10 @@ app.use(updateMondayHours)
 // })
 
 /* Routes */
-// app.get('/', (req, res, next) => {
-//   var responseText = 'Hello, World!'
-//   res.send(responseText)
-// })
+app.get('/', (req, res, next) => {
+  var responseText = 'Hello, World!'
+  res.send(responseText)
+})
 
 
 // /* Log Port To Terminal */

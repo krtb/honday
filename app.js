@@ -55,6 +55,12 @@ app.get('/', (req, res, next) => {
   res.send(responseText)
   next()
 })
+
+/* Log Port To Terminal */
+app.listen(port, () => {
+  console.log(`HondayBot online at http://localhost:${port}`)
+  next()
+})
 //----------------> Harvest API
 app.use(getAllUsersToFilterIDs)
 app.use(getAllTimeEntries);
@@ -146,10 +152,4 @@ app.use(updateMondayHours)
 //     res.json(error.message)
 //   }
 
-// })
-
-
-// /* Log Port To Terminal */
-// app.listen(port, () => {
-// console.log(`HondayBot online at http://localhost:${port}`)
 // })

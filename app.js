@@ -49,6 +49,12 @@ app.use('/static', express.static(path.join(__dirname, 'dist/index.html')));
 
 /*================ Time Entry Section ================*/
 console.log('Honday Bot is Starting Work')
+/* Routes */
+app.get('/', (req, res, next) => {
+  var responseText = 'Hello, World!'
+  res.send(responseText)
+  next()
+})
 //----------------> Harvest API
 app.use(getAllUsersToFilterIDs)
 app.use(getAllTimeEntries);
@@ -141,12 +147,6 @@ app.use(updateMondayHours)
 //   }
 
 // })
-
-/* Routes */
-app.get('/', (req, res, next) => {
-  var responseText = 'Hello, World!'
-  res.send(responseText)
-})
 
 
 // /* Log Port To Terminal */

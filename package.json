@@ -1,5 +1,6 @@
 {
   "private": true,
+  "main": "app.js",
   "engines": {
     "node": "16.13.0"
   },

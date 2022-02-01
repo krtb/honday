@@ -8,7 +8,6 @@
     "start": "node app"
   },
   "dependencies": {
-    "express": "^4.17.2",
     "twilio": "^3.71.2"
   },
   "devDependencies": {

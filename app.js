@@ -9,11 +9,12 @@ const port = process.env.SERVER_PORT_8080;
 const cron = require('node-cron');
 
 /* Twilio */
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const client = require('twilio')(accountSid, authToken);
-const devTwilioNumber = process.env.DEV_TWILIO_NUMBER;
-const devNumberToContact = process.env.DEV_PERSONAL_NUMBER;
+//TODO: Add back in when testing complete
+// const accountSid = process.env.TWILIO_ACCOUNT_SID;
+// const authToken = process.env.TWILIO_AUTH_TOKEN;
+// const client = require('twilio')(accountSid, authToken);
+// const devTwilioNumber = process.env.DEV_TWILIO_NUMBER;
+// const devNumberToContact = process.env.DEV_PERSONAL_NUMBER;
 
 /* Time_Entries Board */
 const {

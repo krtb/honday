@@ -149,6 +149,6 @@ app.get('/', (req, res, next) => {
 
 
 /* Log Port To Terminal */
-const server = app.listen(port, () => {
+app.listen(port, () => {
 console.log(`HondayBot online at http://localhost:${port}`)
 })

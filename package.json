@@ -5,7 +5,9 @@
     "node": "16.13.0"
   },
   "scripts": {
-    "start": "node app"
+    "dev": "node app.js",
+    "postinstall": "npm run build",
+    "start": "NODE_ENV=production node app.js"
   },
   "dependencies": {
     "twilio": "^3.71.2"

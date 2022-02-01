@@ -20,13 +20,13 @@ const {
   getAllTimeEntries,
   buildTimeEntriesForMondayBoard,
   addEmailAndIdToTimeEntry,
-} = require('./middleware/harvestTimeEntries');
+} = require('../middleware/harvestTimeEntries');
 
 const { 
   compareExisitingAndNewProjectUserAssignments, 
   getAllUsersToFilterIDs,
   sendNewHarvestDataToMondayApp, 
-} = require('./middleware/mondayTimeEntries');
+} = require('../middleware/mondayTimeEntries');
 
 /* Project Roll-Up Board, Hours */
 const {
@@ -35,13 +35,13 @@ const {
   getExistingMondayBoardValues,
   updateMondayHours,
   killRequests
-} = require('./middleware/mondayHours');
+} = require('../middleware/mondayHours');
 
 const {
   findHarvestProjectByPsCode,
   findTimeEntriesByProjectId,
   getProjectBudgetReports,
-} = require('./middleware/harvestHours');
+} = require('../middleware/harvestHours');
 
 //See here for config options ==> http://expressjs.com/en/starter/static-files.html
 app.use('/static', express.static(path.join(__dirname, 'dist/index.html')));

@@ -115,30 +115,94 @@ module.exports={
       .then((response)=>{
         // Access Project Budget Response results and store in array defined above
         projectBudgetsForMonday.push(response.data.results)
-        return response
+
       }).catch((error)=> 'There was an error here: ' + error)
       await timer(1000)
       // Remove nested arrays 
       let flatProjectBudgets = projectBudgetsForMonday.flat()
 
-      for (let index = 0; index <= flatProjectBudgets.length - 1; index++) {
-        //TODO: Matching with ProjectIds does not return any data
-        // Currently matches with client_name
-        // Only by matching on Project Name, do 10 items get returned, with 1 duplicate.
-        // Project Ids obtained from /projects endpoint, and /Project_Budget Project_Id do not match
-        // Project Name is not the Client, Project is `Quick Start for Web - Enterprise` general bucket, with unique client names
-        // Example Below 
-        // project_id: 28416027,
-        // project_name: 'Quick Start for Web - Enterprise',
-        getMondayProjectPsNames.filter((getMondayProjectPsNames) => getMondayProjectPsNames === flatProjectBudgets[index].client_name? matchedProjectBudgetsForMonday.push(flatProjectBudgets[index]) : null)
+      let containProjectIds = []
+
+      harvestProjectsForMonday.map((aProject)=>{
+        // console.log(aProject);
+        containProjectIds.push(aProject.client.id)
+      })
+
+      // TODO: Attempt to loop over client Ids
+      let collectHarvestClientIds = []
+      harvestProjectsForMonday.map((aProject)=>{
+        collectHarvestClientIds.push(aProject.client.id)
+      })
+
+      let collectHarvestProjectNames= []
+      harvestProjectsForMonday.map((aProject)=>{
+        collectHarvestProjectNames.push(aProject.project_name)
+      })
+      let collectHarvestBudgetClientIds = []
+      flatProjectBudgets.map((aBudget)=>{
+        collectHarvestBudgetClientIds.push(aBudget.client_id)
+      })
+      let collectHarvestBudgetProjectIds = []
+      flatProjectBudgets.map((aBudget)=>{
+        collectHarvestBudgetProjectIds.push(aBudget.project_id)
+      })
+
+      let containBudgetNames= []
+      flatProjectBudgets.map((aBudget)=>{
+        containBudgetNames.push(aBudget.client_name)
+      })
+
+      //TODO: Find property to match more projects by, only 7 with 1 dupelicate.
+      function getCommon(arr1, arr2) {
+        var common = [];                   // Array to contain common elements
+
+        for(var i=0 ; i<arr1.length ; ++i) {
+          for(var j=0 ; j<arr2.length ; ++j) {
+            // console.log(arr1[i]);
+            if(arr1[i].client.id === arr2[j].client_id) { // If element is in both the arrays
+              common.push(arr1[i]); // Push to common array
+            }
+          }
+        }
+        
+        return common;// Return the common elements
       }
 
-      // Remove Duplicate Project Budget values
-      let uniqueProjectBudgets = [...new Set(matchedProjectBudgetsForMonday)];
+      let foundCommon = getCommon(harvestProjectsForMonday, flatProjectBudgets)
+      console.log(foundCommon, `found ${foundCommon.length} matches `);
 
-      console.log(`====================== There are a total of ${uniqueProjectBudgets.length} unique project budgets ======================`);
-      res.locals.uniqueProjectBudgets = uniqueProjectBudgets
-      next()
+      //TODO: Looping over project Ids
+      // let testThis = []
+      // flatProjectBudgets.map((singleProjectBudget)=>{
+      //   containProjectIds.filter((singleHarverstId)=>{
+      //     return singleHarverstId === singleProjectBudget.client_id
+      //     // console.log(singleHarverstId, singleProjectBudget, '<-------------------- testing');
+      //     // if(singleHarverstId === singleProjectBudget.client_id){
+      //     //   testThis.push(singleProjectBudget)
+      //     // }
+      //   })
+      // })
+      // console.log(testThis, 'final array here <---------------------', testThis.length);
+
+      // for (let index = 0; index <= flatProjectBudgets.length - 1; index++) {
+      //   //TODO: Matching with ProjectIds does not return any data
+      //   // Currently matches with client_name
+      //   // Only by matching on Project Name, do 10 items get returned, with 1 duplicate.
+      //   // Project Ids obtained from /projects endpoint, and /Project_Budget Project_Id do not match
+      //   // Project Name is not the Client, Project is `Quick Start for Web - Enterprise` general bucket, with unique client names
+      //   // Example Below 
+      //   // project_id: 28416027,
+      //   // project_name: 'Quick Start for Web - Enterprise',
+      //   console.log(pullharvestProjectIds[index], '<---------- TESTING THESE VALUES ------------');
+      //   // getMondayProjectPsNames.filter((getMondayProjectPsNames) => getMondayProjectPsNames === flatProjectBudgets[index].client_name? matchedProjectBudgetsForMonday.push(flatProjectBudgets[index]) : null)
+      // }
+
+      // Remove Duplicate Project Budget values
+      // let uniqueProjectBudgets = [...new Set(matchedProjectBudgetsForMonday)];
+
+      // console.log(`====================== There are a total of ${uniqueProjectBudgets.length} unique project budgets ======================`);
+      // res.locals.uniqueProjectBudgets = uniqueProjectBudgets
+      // next()
     }
     loadAPIRequestsWithDelayTimer()
   }

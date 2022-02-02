@@ -38,7 +38,7 @@ module.exports = {
 
       //TODO: Find something to loop by
       for (var i = 0; i <= totalMondayUserCount; totalMondayUserCount[i++]) {
-        console.log(`Pulling Users form Monday, on: ${i + 1} of ${ totalMondayUserCount}` );
+        console.log(`Pulling Users from Monday, on: ${i + 1} of ${ totalMondayUserCount}` );
         //TODO: rethink this variable
         let query = "query { users { email id } }"
     
@@ -65,7 +65,9 @@ module.exports = {
           console.log('Here is my error:' + error, 'error');
         })
         // When the engine reaches the await part, it sets a timeout and halts the execution of the async function.
-        await timer(1000); // Then the created Promise can be awaited
+        //10 Seconds timeout to satisfy Heroku
+
+        await timer(10000); // Then the created Promise can be awaited
         // Finally the timeout completes & execution continues at this point. 
       }
       res.locals.allMondayUsersContainer = allMondayUsersContainer

@@ -23,7 +23,8 @@ module.exports = {
           }
           ).then((response)=>{
             totalMondayUserCount = response.data.data.users.length
-            // console.log(totalMondayUserCount, '<-------------- getUsersTotalPages');
+            console.log(totalMondayUserCount, '<-------------- getUsersTotalPages, return response');
+            return response
           }).catch((error)=>{
             console.log('Here is my error:' + error, 'error');
           })

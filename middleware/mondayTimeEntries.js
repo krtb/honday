@@ -9,31 +9,71 @@ const mondayURL = process.env.MONDAY_APIV2_URL;
 
 module.exports = {
   getAllUsersToFilterIDs: async (req, res, next) => {
-    let allMondayUsersContainer = [];
+    //TODO: Get total page count
     let query = "query { users { email id } }"
+    let totalMondayUserCount = 0
 
-    await axios.post("https://api.monday.com/v2",  {
-      'query': query,
-    }, {
-        headers: {
-          'Content-Type': `application/json`,
-          'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
-        },
-    }
-    ).then((response)=>{
-      let allUsersWithEmailAndId = response.data.data.users
+    axios.post("https://api.monday.com/v2",  {
+            'query': query,
+          }, {
+              headers: {
+                'Content-Type': `application/json`,
+                'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
+              },
+          }
+          ).then((response)=>{
+            totalMondayUserCount = response.data.data.users.length
+            // console.log(totalMondayUserCount, '<-------------- getUsersTotalPages');
+          }).catch((error)=>{
+            console.log('Here is my error:' + error, 'error');
+          })
 
-      // Store in outer level variable
-      allUsersWithEmailAndId.map((singleMondayUser)=>{
-        allMondayUsersContainer.push(singleMondayUser)
-      })
+    // Start of logic for loadAPIRequestsWithDelayTimer()  ------------------------------------------------------------------------------------<
 
+    // Returns a Promise that resolves after Milliseconds
+    const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
+
+    async function loadAPIRequestsWithDelayTimer() { // We need to wrap the loop in a asynchronus function for this to work
+      let allMondayUsersContainer = [];
+
+      //TODO: Find something to loop by
+      for (var i = 0; i <= totalMondayUserCount; totalMondayUserCount[i++]) {
+        console.log(`Pulling Users form Monday, on: ${i + 1} of ${ totalMondayUserCount}` );
+        //TODO: rethink this variable
+        let query = "query { users { email id } }"
+    
+        await axios.post("https://api.monday.com/v2",  {
+          'query': query,
+        }, {
+            headers: {
+              'Content-Type': `application/json`,
+              'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
+            },
+        }
+        ).then((response)=>{
+          let allUsersWithEmailAndId = response.data.data.users
+    
+          // Store in outer level variable
+          allUsersWithEmailAndId.map((singleMondayUser)=>{
+            allMondayUsersContainer.push(singleMondayUser)
+          })
+    
+          
+          // next()
+          // console.log(allMondayUsersContainer, 'allMondayUsersContainer');
+        }).catch((error)=>{
+          console.log('Here is my error:' + error, 'error');
+        })
+        // When the engine reaches the await part, it sets a timeout and halts the execution of the async function.
+        await timer(1000); // Then the created Promise can be awaited
+        // Finally the timeout completes & execution continues at this point. 
+      }
       res.locals.allMondayUsersContainer = allMondayUsersContainer
-      next()
-      // console.log(allMondayUsersContainer, 'allMondayUsersContainer');
-    }).catch((error)=>{
-      console.log('Here is my error:' + error, 'error');
-    })
+      // console.log(allMondayUsersContainer, '<-------- COMPLETED');
+    }
+
+    loadAPIRequestsWithDelayTimer()
+    // End of logic for loadAPIRequestsWithDelayTimer()  ------------------------------------------------------------------------------------<
   },
   compareExisitingAndNewProjectUserAssignments: async (req, res, next) => {
     let harvestTimeEntriesContainer = res.locals.filteredTimeEntryObjectsForMondayWithUserEmail

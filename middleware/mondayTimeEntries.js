@@ -237,6 +237,7 @@ module.exports = {
         })
         .then((response)=>{
           console.log(response.data, '<--- Requests ok');
+          return response
         })
         .catch((error)=> 'There was an error here: ' + error)
 

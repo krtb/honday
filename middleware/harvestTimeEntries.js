@@ -173,7 +173,8 @@ module.exports = {
             email: mySpecificHarvestUser.data.email
           }
 
-          harvestUserIdNameEmail.push(filertedHarvestUserData)            
+          harvestUserIdNameEmail.push(filertedHarvestUserData)       
+          return mySpecificHarvestUser     
         })
 
         // When the engine reaches the await part, it sets a timeout and halts the execution of the async function.

@@ -51,6 +51,7 @@ module.exports ={
       // Store Locally
       res.locals.getMondayProjectPsCodes = mondayPsCodes
       next()
+      return response
     })
     .catch((error)=>{
       console.log('There was an error here: ' + error);
@@ -106,6 +107,7 @@ module.exports ={
       // Store Locally
       res.locals.getMondayProjectPsNames = mondayBoardProjectNames
       next()
+      return response
     })
     .catch((error)=>{
       console.log('There was an error here: ' + error);
@@ -148,6 +150,7 @@ module.exports ={
       console.log(`Store Project Objects from Monday. ${mondayProjectObjects.length} Monday.com Objects from Roll-Up Board`);
       res.locals.mondayProjectObjects = mondayProjectObjects
       next()
+      return response
     })
     .catch((error)=>{
       console.log('There was an error here: ' + error);
@@ -242,6 +245,7 @@ module.exports ={
         .then((response)=>{
           // Log 200 Response from Monday.com
           console.log(response.data, '<--- Requests ok');
+          return response
         })
         .catch((error)=> 'There was an error here: ' + error)
       

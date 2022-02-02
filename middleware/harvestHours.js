@@ -37,6 +37,7 @@ module.exports={
         let firstPageData = response.data;
         // Store total_pages value, to be used as limit in loop below
         total_pages = firstPageData.total_pages;
+        return response
       });
 
       // Paginate through Project pages, to store all Projects - start on page 1
@@ -53,6 +54,7 @@ module.exports={
           storeAllProjects.push(projectsResponse)
           // Log out current page and total pages
           console.log(`Searching Projects, on page ${index} of ${total_pages} in Harvest`);
+          return response
         })
         .catch((error)=> 'There was an error here: ' + error)
 
@@ -113,7 +115,7 @@ module.exports={
       .then((response)=>{
         // Access Project Budget Response results and store in array defined above
         projectBudgetsForMonday.push(response.data.results)
-
+        return response
       }).catch((error)=> 'There was an error here: ' + error)
       await timer(1000)
       // Remove nested arrays 

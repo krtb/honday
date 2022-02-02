@@ -23,7 +23,9 @@ module.exports = {
           }
           ).then((response)=>{
             totalMondayUserCount = response.data.data.users.length
+
             console.log(totalMondayUserCount, '<-------------- getUsersTotalPages, return response');
+            // Always return a promise, required by Heroku
             return response
           }).catch((error)=>{
             console.log('Here is my error:' + error, 'error');
@@ -36,7 +38,6 @@ module.exports = {
     async function loadAPIRequestsWithDelayTimer() { // We need to wrap the loop in a asynchronus function for this to work
       let allMondayUsersContainer = [];
 
-      //TODO: Find something to loop by
       for (var i = 0; i <= totalMondayUserCount; totalMondayUserCount[i++]) {
         console.log(`Pulling Users from Monday, on: ${i + 1} of ${ totalMondayUserCount}` );
         //TODO: rethink this variable
@@ -52,24 +53,23 @@ module.exports = {
         }
         ).then((response)=>{
           let allUsersWithEmailAndId = response.data.data.users
-    
           // Store in outer level variable
           allUsersWithEmailAndId.map((singleMondayUser)=>{
             allMondayUsersContainer.push(singleMondayUser)
           })
           return response
-          // next()
           // console.log(allMondayUsersContainer, 'allMondayUsersContainer');
         }).catch((error)=>{
           console.log('Here is my error:' + error, 'error');
         })
         // When the engine reaches the await part, it sets a timeout and halts the execution of the async function.
-        //10 Seconds timeout to satisfy Heroku
-        await timer(10000); // Then the created Promise can be awaited
+        //under 500ms best, Monday and Harvest require 1 Second timeout
+        await timer(1000); // Then the created Promise can be awaited
         // Finally the timeout completes & execution continues at this point. 
       }
       res.locals.allMondayUsersContainer = allMondayUsersContainer
-      // console.log(allMondayUsersContainer, '<-------- COMPLETED');
+      next()
+      console.log(allMondayUsersContainer, '<-------- allMondayUsersContainer COMPLETED');
     }
 
     loadAPIRequestsWithDelayTimer()

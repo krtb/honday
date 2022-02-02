@@ -59,12 +59,13 @@ module.exports = {
             allMondayUsersContainer.push(singleMondayUser)
           })
           // console.log(allMondayUsersContainer, 'allMondayUsersContainer');
+          return response
         }).catch((error)=>{
           console.log('Here is my error:' + error, 'error');
         })
         // When the engine reaches the await part, it sets a timeout and halts the execution of the async function.
         //under 500ms best, Monday and Harvest require 1 Second timeout
-        await timer(10000); // Then the created Promise can be awaited
+        await timer(1000); // Then the created Promise can be awaited
         // Finally the timeout completes & execution continues at this point. 
       }
       res.locals.allMondayUsersContainer = allMondayUsersContainer
@@ -245,12 +246,14 @@ module.exports = {
         await timer(1000); // Then the created Promise can be awaited
         // Finally the timeout completes & execution continues at this point. 
       }
+
+      console.log('=============== Creating Items Complete! ================');
+      next()
     }
 
     loadAPIRequestsWithDelayTimer()
     // End of logic for loadAPIRequestsWithDelayTimer()  ------------------------------------------------------------------------------------<
 
-    console.log('=============== Creating Items Complete! ================');
 
   },
 }

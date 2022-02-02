@@ -10,6 +10,7 @@ const mondayURL = process.env.MONDAY_APIV2_URL;
 module.exports = {
   getAllUsersToFilterIDs: async (req, res, next) => {
     //TODO: Get total page count
+    console.log('Starting to filter on id');
     let query = "query { users { email id } }"
     let totalMondayUserCount = 0
 

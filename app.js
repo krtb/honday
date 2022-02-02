@@ -45,13 +45,13 @@ const {
 } = require('./middleware/harvestHours');
 
 //See here for config options ==> http://expressjs.com/en/starter/static-files.html
-app.use('/static', express.static(path.join(__dirname, 'dist/index.html')));
+// app.use('/static', express.static(path.join(__dirname, 'dist/index.html')));
 
 /*================ Time Entry Section ================*/
 console.log('Honday Bot is Starting Work')
 
 //----------------> Harvest API
-app.use(getAllUsersToFilterIDs)
+app.use(getAllUsersToFilterIDs);
 app.use(getAllTimeEntries);
 app.use(buildTimeEntriesForMondayBoard);
 app.use(addEmailAndIdToTimeEntry);
@@ -143,12 +143,12 @@ app.use(updateMondayHours)
 
 // })
 /* Routes */
-app.get('/', (req, res, next) => {
+app.get('/', function (req, res) {
   var responseText = 'Hello, World!'
   res.send(responseText)
 })
 
-/* Log Port To Terminal */
-app.listen(port, (req, res, next) => {
+// /* Log Port To Terminal */
+app.listen(port, function (req, res) {
   console.log(`HondayBot online at http://localhost:${port}`)
 })

@@ -34,13 +34,14 @@ module.exports = {
 
       // Dynamically call TimeEntries from Harvestm, with API pagination
       await axios.get(paginationUrl, axiosConfigObject)
-        .then((resp)=> {
+        .then((response)=> {
           // TODO: Get total number of pages from data, display in console log
-          let data = resp.data
+          let data = response.data
           // Currently 112
           totalPageCount = data.total_pages
           // 100 per GET Request
           arrayOfTimeEntryObjects = data[Object.keys(data)[0]]
+          return response
       })
 
       console.log(`====== My array of arrayOfTimeEntryObjects is this long: ${arrayOfTimeEntryObjects.length} and total_pages:${totalPageCount} ======`);
@@ -73,7 +74,7 @@ module.exports = {
             })
 
           });
-
+          return response
         })
         .catch((error)=> 'There was an error here: ' + error)
 

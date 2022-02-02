@@ -64,7 +64,7 @@ module.exports = {
         })
         // When the engine reaches the await part, it sets a timeout and halts the execution of the async function.
         //under 500ms best, Monday and Harvest require 1 Second timeout
-        await timer(1000); // Then the created Promise can be awaited
+        await timer(10000); // Then the created Promise can be awaited
         // Finally the timeout completes & execution continues at this point. 
       }
       res.locals.allMondayUsersContainer = allMondayUsersContainer

@@ -32,7 +32,6 @@ module.exports = {
 
     // Returns a Promise that resolves after Milliseconds
     const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
-
     async function loadAPIRequestsWithDelayTimer() { // We need to wrap the loop in a asynchronus function for this to work
       let allMondayUsersContainer = [];
 
@@ -58,7 +57,6 @@ module.exports = {
             allMondayUsersContainer.push(singleMondayUser)
           })
     
-          
           // next()
           // console.log(allMondayUsersContainer, 'allMondayUsersContainer');
         }).catch((error)=>{
@@ -66,7 +64,6 @@ module.exports = {
         })
         // When the engine reaches the await part, it sets a timeout and halts the execution of the async function.
         //10 Seconds timeout to satisfy Heroku
-
         await timer(10000); // Then the created Promise can be awaited
         // Finally the timeout completes & execution continues at this point. 
       }

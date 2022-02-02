@@ -58,7 +58,6 @@ module.exports = {
           allUsersWithEmailAndId.map((singleMondayUser)=>{
             allMondayUsersContainer.push(singleMondayUser)
           })
-          return response
           // console.log(allMondayUsersContainer, 'allMondayUsersContainer');
         }).catch((error)=>{
           console.log('Here is my error:' + error, 'error');

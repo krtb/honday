@@ -7,8 +7,9 @@
   "scripts": {
     "start": "node app.js"
   },
-  "dependencies": {    
+  "dependencies": {
     "express": "^4.17.2",
+    "request": "^2.88.2",
     "twilio": "^3.71.2"
   },
   "devDependencies": {

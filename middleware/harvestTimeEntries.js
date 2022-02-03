@@ -176,6 +176,9 @@ module.exports = {
           harvestUserIdNameEmail.push(filertedHarvestUserData)       
           return mySpecificHarvestUser     
         })
+        .catch((error)=>{
+          console.log(`There was an error adding Email and Date: ${error}`)
+        })
 
         // When the engine reaches the await part, it sets a timeout and halts the execution of the async function.
         await timer(1000); // Then the created Promise can be awaited
@@ -212,7 +215,7 @@ module.exports = {
 
       res.locals.filteredTimeEntryObjectsForMondayWithUserEmail = TimeEntriesWithEmailAndMondayID
       console.log(`==================================== ${TimeEntriesWithEmailAndMondayID.length} Time Entries Updated ! ====================================`);
-      next()
+      return next()
     }
     loadAPIRequestsWithDelayTimer();
     // End of logic for loadAPIRequestsWithDelayTimer()  ------------------------------------------------------------------------------------<

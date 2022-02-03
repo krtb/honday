@@ -80,6 +80,18 @@ module.exports = {
     let harvestTimeEntriesContainer = res.locals.filteredTimeEntryObjectsForMondayWithUserEmail
     // console.log('Your Harvest collection of User IDs is this long: ' + harvestTimeEntriesContainer.length );
     let myExistingTimeEntryIds = []
+
+    // Create date time object
+    let dateOfToday = new Date();
+    let firstRowDate = ''
+    // Transform into ISO format, like this => 2022-01-04
+    let todaysDateIsoUtcTimezone = await function ISODateString(datOfToday) {
+      function pad(n) {return n<10 ? '0'+n : n}
+      return datOfToday.getUTCFullYear()+'-'
+          + pad(datOfToday.getUTCMonth()+1)+'-'
+          + pad(datOfToday.getUTCDate())
+    }(dateOfToday)
+
     let queryToViewAllItemsOnBoard = `{
       boards (ids: ${devMondayBoardID}) {
         items {
@@ -109,7 +121,10 @@ module.exports = {
     .then((response) => {
       // Find Each Time Entry ID which exists on Monday.com
       // Array[] of Objects{}
-      let column_values = response.data.data.boards[0].items
+      // Get the first time entry at the start of the Monday Board List
+      let column_values = response.data.data.boards[0].items[0].column_values[1].value
+      firstRowDate = column_values.split('"')[3]
+      // console.log(todaysDateIsoUtcTimezone, 'todaysDateIsoUtcTimezone <-------', (todaysDateIsoUtcTimezone === '2022-02-03'));
 
       // TODO: Finish replacing function that checks if timeEntry exists in monday.com
       // ---------------- To Replace Below check of Monday.com values ----------------
@@ -142,22 +157,27 @@ module.exports = {
       //   return singleValue.timeEntryId === myExistingTimeEntryIds
       // })
       // ---------------- To Replace Below check of Monday.com values ----------------
-
-      if (column_values.length > 0) {
+      //TODO: Validate that this check works
+      if (todaysDateIsoUtcTimezone ==! firstRowDate) {
 
         console.log('time entries exist!', column_values);
 
         let existingTimeEntryIdStrings = column_values.map( (singleItem) => {
-            // remove double quites from strings, which are numbers
+            // remove double quotes from strings, which are numbers
+            //TODO: Figure out why this is null
+            console.log(singleItem, 'My Items to replace')
             return singleItem.column_values[0].value.replace(/["']/g, "")
         })
 
         let onlyUniqueEntries = harvestTimeEntriesContainer.filter(o1 => existingTimeEntryIdStrings.some(o2 => o1.timeEntryId !== o2? o1 : null));
+
         console.log(onlyUniqueEntries, `Here is a count of my time entries to update: ${onlyUniqueEntries.length}`);
+
         res.locals.arrayOfHarvestTimeEntriesToCreate = onlyUniqueEntries;
+
         next()
       } else {
-        console.log('empty! -------> Sending harvest entries to be created');
+        console.log('Outdated Entries! -------> Sending harvest entries to be created');
         res.locals.arrayOfHarvestTimeEntriesToCreate = harvestTimeEntriesContainer
         next()
       }

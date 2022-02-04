@@ -121,6 +121,10 @@ module.exports={
       // Remove nested arrays 
       let flatProjectBudgets = projectBudgetsForMonday.flat()
 
+      // TODO: Join on PS code between project budgets and projects.
+      // Then, collect all projects that don't match
+      // Send project objects to Chat group
+      
       for (let index = 0; index <= flatProjectBudgets.length - 1; index++) {
         //TODO: Matching with ProjectIds does not return any data
         // Currently matches with client_name

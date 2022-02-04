@@ -9,6 +9,11 @@ let options = {
   }
 };
 
+module.exports.start_job = function(){
 request(options, function (error, response) {
   if (error) throw new Error(error)
 });
+
+}
+
+require('make-runnable');

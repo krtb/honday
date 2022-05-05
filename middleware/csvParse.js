@@ -67,22 +67,9 @@ Object.assign(module.exports, {
     
     //Id from Monday Board to be uploaded to 
     const devMondayBoardID = process.env.TIME_TRACKING_MONDAY_BOARD_ID_DUPE;
-    // Query to view Monday Board Title and Types, in order to push to
-    const query = `query { boards (ids: ${devMondayBoardID}) { owner { id }  columns {   title   type }}}`;
 
-    let queryToViewAllItemsOnBoard = `{
-      boards (ids: ${devMondayBoardID}) {
-        items {
-          id
-          name
-          column_values {
-            id
-            title
-            value
-          }
-        }
-      }
-    }`;
+    //Query to view Monday Board Title and Types, in order to push to
+    const query = `query { boards (ids: ${devMondayBoardID}) { owner { id }  columns {   title   type }}}`;
 
     axios.post("https://api.monday.com/v2",  {
       'query': query,
@@ -95,8 +82,9 @@ Object.assign(module.exports, {
     })
     .then((response)=>{
 
-      const MondayBoardColumnValues = response.data.boards[0]
-      console.log(MondayBoardColumnValues, '<--- Monday Response')
+      const MondayBoardColumnValues = response.data.data.boards[0]
+      //TODO: After testing complete, remove log
+      console.log(MondayBoardColumnValues)
 
       // Always return a promise, required by Heroku
       return response;

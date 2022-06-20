@@ -5,10 +5,11 @@ const { JobList } = require('twilio/lib/rest/bulkexports/v1/export/job');
 const { json } = require('express/lib/response');
 const { clear } = require('console');
 let arrayOfProjectTrsBoardObjects;
-let formattedLineItem;
-let arrayOfProjectTrsPSCodes = [];
 let trashPsCodes = [];
 let harvestObjectsToSendToMonday = [];
+//TODO: Revisit below variables and consider removing.
+let arrayOfProjectTrsPSCodes = [];
+
 // Quirks with using module.exports, when modules circularly depend on each other.
 // It is recommended against replacing the object.
 // For multiple exports at once, using object literal definition, implement the below
@@ -19,19 +20,19 @@ let harvestObjectsToSendToMonday = [];
 // https://nodejs.org/api/modules.html#modules_cycles
 
 // Express expects a Middleware function in order to run without failing.
+
 Object.assign(module.exports, {
   parseCSV: async (req, res, next) =>{
     const fs = require('fs');
     const { parse } = require('csv-parse');
     // Note, the `stream/promises` module only on Node.js => version 16^
     const { finished } = require('stream/promises');
-    // CSV file that is being uploaded
-    const allHarvestItemsCsv = './csvFiles/2022-05-08-harvest_time_report.csv';
+    // Path to CSV file that is manually exported from Harvest & imported into project folder.
     const onlyCurrentHarvestProjects = './csvFiles/2022-06-08_harvest_codes_for_monday.csv';
     const records = await [];
     const stream = fs.createReadStream(onlyCurrentHarvestProjects);
     const parser = stream.pipe(parse({ delimiter: ',', columns: true,}));
-    // Below not used, may remove
+    // TODO: Revisit below variables and consider removing.
     // const assert = require('assert');
     // const os = require('os');
     // const path = require('path');
@@ -44,13 +45,11 @@ Object.assign(module.exports, {
         records.push(record);
       };
     });
-
     await finished(parser);
 
     {
       // Create a copy of Records
       const allMyRecords = records;
-
       const arrayOfaHarvestObjects = await allMyRecords.map((aSingleRecord)=>{
           const singleaHarvestObject = {
             'Date': aSingleRecord.Date,
@@ -77,11 +76,9 @@ Object.assign(module.exports, {
           }
           return singleaHarvestObject;
       });
-
       res.locals.arrayOfaHarvestObjects = arrayOfaHarvestObjects;
       console.log(`Collected ${arrayOfaHarvestObjects.length} line items from CSV file.`);
     }
-
     next();
   },
   viewMondayBoardValues: async (req, res, next ) =>{

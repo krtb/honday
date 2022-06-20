@@ -124,34 +124,11 @@ Object.assign(module.exports, {
     next();
   },
   getUserFromMonday: async (req, res, next) => {
-    //TODO: Get total page count
-    console.log('Starting to filter on id');
-    // let query = "query { users { email id } }"
-    // let totalMondayUserCount = 0
-
-    // axios.post("https://api.monday.com/v2",  {
-    //   'query': query,
-    //   }, 
-    //   {
-    //     headers: {
-    //       'Content-Type': `application/json`,
-    //       'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
-    //     },
-    //   }).then((response)=>{
-    //     totalMondayUserCount = response.data.data.users.length
-    //     return response
-    //   }).catch((error)=>{
-    //     console.log('Here is my error:' + error, 'error');
-    // })
-
-    // Start of logic for loadAPIRequestsWithDelayTimer()  ------------------------------------------------------------------------------------<
-
-    // Returns a Promise that resolves after Milliseconds
-    
-    // async function loadAPIRequestsWithDelayTimer() { // We need to wrap the loop in a asynchronus function for this to work
+    console.log('Getting Current Users from Monday.com');
+    {
       let allMondayUsersContainer = [];
       let query = "query { users { email id name} }"
-    
+      
       await axios.post("https://api.monday.com/v2",  {
         'query': query,
       }, {
@@ -166,15 +143,11 @@ Object.assign(module.exports, {
       }).catch((error)=>{
         console.log('Here is my error:' + error, 'error');
       })
-
+  
       res.locals.allMondayUsersContainer = allMondayUsersContainer
-
-      console.log(`${allMondayUsersContainer.length} Monday Users collected.`)
+      console.log(`${allMondayUsersContainer.length} Monday.com Users collected.`)
       next()
-    // }
-
-    // loadAPIRequestsWithDelayTimer()
-    // End of logic for loadAPIRequestsWithDelayTimer()  ------------------------------------------------------------------------------------<
+    }
   },
   getProjectTRSBoardProjectData: async (req, res, next)=>{
     const projectTrsBoard = 2495489300;

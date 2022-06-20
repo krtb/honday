@@ -22,16 +22,50 @@ let arrayOfProjectTrsPSCodes = [];
 // Express expects a Middleware function in order to run without failing.
 
 Object.assign(module.exports, {
+  viewMondayBoardValues: async (req, res, next ) =>{
+    // Note: This function serves as a READ operation. Not required for application to run.
+    console.log("Querying Monday Board Values.");
+    {
+      const projectTrsBoard = 2495489300;
+      const mainTimeTrackBoardProd = 2495489055;
+      const duplicateOfTimeTrackingBoard = 2635507777;
+      const viewBoardColumns = `query { boards (ids: ${duplicateOfTimeTrackingBoard}) { owner { id }  columns {   title   type }}}`;
+      let query = `{
+        boards (ids: ${duplicateOfTimeTrackingBoard}) {
+          items {
+            id
+            name
+            column_values {
+              id
+              title
+              value
+            }
+          }
+        }
+      }`;
+  
+      await axios.post("https://api.monday.com/v2",  {
+        'query': query,
+      },
+      {
+        headers: {
+          'Content-Type': `application/json`,
+          'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
+        },
+      },
+      )
+      .then((response)=>{
+        console.log(response)
+        debugger
+      })
+      .catch((error)=>{
+        console.log('Here is my error:' + error, 'error');
+      });
+      next();
+    }
+  },
   parseCSV: async (req, res, next) =>{
-    const fs = require('fs');
-    const { parse } = require('csv-parse');
-    // Note, the `stream/promises` module only on Node.js => version 16^
-    const { finished } = require('stream/promises');
-    // Path to CSV file that is manually exported from Harvest & imported into project folder.
-    const onlyCurrentHarvestProjects = './csvFiles/2022-06-08_harvest_codes_for_monday.csv';
-    const records = await [];
-    const stream = fs.createReadStream(onlyCurrentHarvestProjects);
-    const parser = stream.pipe(parse({ delimiter: ',', columns: true,}));
+    console.log("Read Harvest CSV, map and transform values.");
     // TODO: Revisit below variables and consider removing.
     // const assert = require('assert');
     // const os = require('os');
@@ -39,91 +73,60 @@ Object.assign(module.exports, {
     // const debug = require('debug')('app:csv:service');
     // const chalk = await import('chalk');
 
-    parser.on('readable', () => {
-      let record;
-      while ((record = parser.read()) !== null) {
-        records.push(record);
-      };
-    });
-    await finished(parser);
-
     {
-      // Create a copy of Records
-      const allMyRecords = records;
-      const arrayOfaHarvestObjects = await allMyRecords.map((aSingleRecord)=>{
-          const singleaHarvestObject = {
-            'Date': aSingleRecord.Date,
-            'Client': aSingleRecord.Client,
-            'Project': aSingleRecord.Project,
-            'ProjectCode': aSingleRecord['Project Code'],
-            'Task': aSingleRecord.Task,
-            'Notes': aSingleRecord.Notes,
-            'Hours': aSingleRecord.Hours,
-            'HoursRounded': aSingleRecord['Hours Rounded'],
-            'Billable': aSingleRecord['Billable?'],
-            'Invoiced': aSingleRecord['Invoiced?'],
-            'Approved': aSingleRecord['Approved?'],
-            'FirstName': aSingleRecord['First Name'],
-            'LastName': aSingleRecord['Last Name'],
-            'Roles': aSingleRecord.Roles,
-            'Employee': aSingleRecord['Employee?'],
-            'BillableRate': aSingleRecord['Billable Rate'],
-            'BillableAmount': aSingleRecord['Billable Amount'],
-            'CostRate': aSingleRecord['Cost Rate'],
-            'CostAmount': aSingleRecord['Cost Amount'],
-            'Currency': aSingleRecord.Currency,
-            'ExternalReferenceURL': aSingleRecord['External Reference URL'],
-          }
-          return singleaHarvestObject;
+      const fs = require('fs');
+      const { parse } = require('csv-parse');
+      const { finished } = require('stream/promises'); // Note: The `stream/promises` module only works on Node.js => version 16^
+      const onlyCurrentHarvestProjects = './csvFiles/2022-06-08_harvest_codes_for_monday.csv'; // CSV File Path
+      const records = await [];
+      const stream = fs.createReadStream(onlyCurrentHarvestProjects);
+      const parser = stream.pipe(parse({ delimiter: ',', columns: true,}));
+  
+      parser.on('readable', () => {
+        let record;
+        while ((record = parser.read()) !== null) {
+          records.push(record);
+        };
       });
-      res.locals.arrayOfaHarvestObjects = arrayOfaHarvestObjects;
-      console.log(`Collected ${arrayOfaHarvestObjects.length} line items from CSV file.`);
-    }
-    next();
-  },
-  viewMondayBoardValues: async (req, res, next ) =>{
-    //Id from Monday Board to be uploaded to 
-    const projectTrsBoard = 2495489300;
-    const mainTimeTrackBoardProd = 2495489055;
-    const duplicateOfTimeTrackingBoard = 2635507777;
-
-    const viewBoardColumns = `query { boards (ids: ${duplicateOfTimeTrackingBoard}) { owner { id }  columns {   title   type }}}`;
-
-    let query = `{
-      boards (ids: ${duplicateOfTimeTrackingBoard}) {
-        items {
-          id
-          name
-          column_values {
-            id
-            title
-            value
-          }
-        }
+      await finished(parser);
+  
+      {
+        // Create a copy of Records
+        const allMyRecords = records;
+        const arrayOfaHarvestObjects = await allMyRecords.map((aSingleRecord)=>{
+            const singleaHarvestObject = {
+              'Date': aSingleRecord.Date,
+              'Client': aSingleRecord.Client,
+              'Project': aSingleRecord.Project,
+              'ProjectCode': aSingleRecord['Project Code'],
+              'Task': aSingleRecord.Task,
+              'Notes': aSingleRecord.Notes,
+              'Hours': aSingleRecord.Hours,
+              'HoursRounded': aSingleRecord['Hours Rounded'],
+              'Billable': aSingleRecord['Billable?'],
+              'Invoiced': aSingleRecord['Invoiced?'],
+              'Approved': aSingleRecord['Approved?'],
+              'FirstName': aSingleRecord['First Name'],
+              'LastName': aSingleRecord['Last Name'],
+              'Roles': aSingleRecord.Roles,
+              'Employee': aSingleRecord['Employee?'],
+              'BillableRate': aSingleRecord['Billable Rate'],
+              'BillableAmount': aSingleRecord['Billable Amount'],
+              'CostRate': aSingleRecord['Cost Rate'],
+              'CostAmount': aSingleRecord['Cost Amount'],
+              'Currency': aSingleRecord.Currency,
+              'ExternalReferenceURL': aSingleRecord['External Reference URL'],
+            }
+            return singleaHarvestObject;
+        });
+        res.locals.arrayOfaHarvestObjects = arrayOfaHarvestObjects;
+        console.log(`Collected ${arrayOfaHarvestObjects.length} line items from CSV file.`);
       }
-    }`;
-
-    await axios.post("https://api.monday.com/v2",  {
-      'query': query,
-    },
-    {
-      headers: {
-        'Content-Type': `application/json`,
-        'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
-      },
-    },
-    )
-    .then((response)=>{
-      console.log(response)
-      debugger
-    })
-    .catch((error)=>{
-      console.log('Here is my error:' + error, 'error');
-    });
-
-    next();
+      next();
+    }
   },
   getUserFromMonday: async (req, res, next) => {
+    //Note: Monday.com User IDs required to create related User in Monday.com.
     console.log('Getting Current Users from Monday.com');
     {
       let allMondayUsersContainer = [];

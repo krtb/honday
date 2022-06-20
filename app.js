@@ -3,7 +3,7 @@ const app = express();
 const path = require('path');
 const dotenv = require('dotenv');
 dotenv.config(); 
-const port = process.env.PORT || 8080;;
+const port = process.env.PORT || 8080;
 
 /* Cron Job */
 const cron = require('node-cron');
@@ -16,6 +16,17 @@ const cron = require('node-cron');
 // const devTwilioNumber = process.env.DEV_TWILIO_NUMBER;
 // const devNumberToContact = process.env.DEV_PERSONAL_NUMBER;
 
+/* Parse CSV file */
+const { 
+  parseCSV,
+  getProjectTRSBoardProjectData, 
+  compareHarvestCSVAndProjectTRSBoard,
+  getUserFromMonday,
+  viewMondayBoardValues, 
+  postMondayItems, 
+  getHarvestCSVData,
+} = require('./middleware/csvParse');
+
 /* Time_Entries Board */
 const {
   getAllTimeEntries,
@@ -25,7 +36,7 @@ const {
 
 const { 
   compareExisitingAndNewProjectUserAssignments, 
-  getAllUsersToFilterIDs,
+  // getUserFromMonday,
   sendNewHarvestDataToMondayApp, 
 } = require('./middleware/mondayTimeEntries');
 
@@ -49,27 +60,35 @@ const {
 
 /*================ Time Entry Section ================*/
 console.log('Honday Bot is Starting Work')
+// To find which column value types to create
+//app.use(viewMondayBoardValues); TODO: find pulse ids, to pass into TRS board.
+
+app.use(getUserFromMonday);
+app.use(parseCSV);
+app.use(getProjectTRSBoardProjectData);
+app.use(compareHarvestCSVAndProjectTRSBoard);
+app.use(postMondayItems);
 
 //----------------> Harvest API
-app.use(getAllUsersToFilterIDs);
-app.use(getAllTimeEntries);
-app.use(buildTimeEntriesForMondayBoard);
-app.use(addEmailAndIdToTimeEntry);
-//----------------> Monday.com API
-app.use(compareExisitingAndNewProjectUserAssignments);
-app.use(sendNewHarvestDataToMondayApp)
+// app.use(getAllUsersToFilterIDs);
+// app.use(getAllTimeEntries);
+// app.use(buildTimeEntriesForMondayBoard);
+// app.use(addEmailAndIdToTimeEntry);
+// //----------------> Monday.com API
+// app.use(compareExisitingAndNewProjectUserAssignments);
+// app.use(sendNewHarvestDataToMondayApp)
 
-/*================ Actual_Hours Section ================*/
+// /*================ Actual_Hours Section ================*/
 
-//----------------> Monday API
-app.use(getProjectPsCodesMonday)
-app.use(getProjectNamesMonday)
-app.use(getExistingMondayBoardValues)
-//----------------> Harvest API
-app.use(findHarvestProjectByPsCode)
-app.use(getProjectBudgetReports)
-//----------------> Monday.com
-app.use(updateMondayHours)
+// //----------------> Monday API
+// app.use(getProjectPsCodesMonday)
+// app.use(getProjectNamesMonday)
+// app.use(getExistingMondayBoardValues)
+// //----------------> Harvest API
+// app.use(findHarvestProjectByPsCode)
+// app.use(getProjectBudgetReports)
+// //----------------> Monday.com
+// app.use(updateMondayHours)
 
 /* Comment Back in When Hosting Plan Solved */
 // app.use((req, res, next)=>{

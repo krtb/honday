@@ -15,22 +15,22 @@ module.exports = {
     let totalMondayUserCount = 0
 
     axios.post("https://api.monday.com/v2",  {
-            'query': query,
-          }, {
-              headers: {
-                'Content-Type': `application/json`,
-                'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
-              },
-          }
-          ).then((response)=>{
-            totalMondayUserCount = response.data.data.users.length
+      'query': query,
+      }, 
+      {
+        headers: {
+          'Content-Type': `application/json`,
+          'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
+        },
+      }).then((response)=>{
+        totalMondayUserCount = response.data.data.users.length
 
-            console.log(totalMondayUserCount, '<-------------- getUsersTotalPages, return response');
-            // Always return a promise, required by Heroku
-            return response
-          }).catch((error)=>{
-            console.log('Here is my error:' + error, 'error');
-          })
+        console.log(totalMondayUserCount, '<-------------- getUsersTotalPages, return response');
+        // Always return a promise, required by Heroku
+        return response
+      }).catch((error)=>{
+        console.log('Here is my error:' + error, 'error');
+    })
 
     // Start of logic for loadAPIRequestsWithDelayTimer()  ------------------------------------------------------------------------------------<
 
@@ -212,8 +212,7 @@ module.exports = {
     // https://api.developer.monday.com/docs/guide-to-changing-column-data
           
     let mondayObjects = harvestObjectForMonday.map((singleHarvestObject)=>{
-
-      console.log(singleHarvestObject, '====================================< Single Harvest Object before monday');
+    console.log(singleHarvestObject, '====================================< Single Harvest Object before monday');
       
       let variablesForCreatingContent = JSON.stringify({
         "myItemName": singleHarvestObject.submitter,

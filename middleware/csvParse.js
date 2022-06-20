@@ -4,7 +4,7 @@ const fs = require('fs');
 const { JobList } = require('twilio/lib/rest/bulkexports/v1/export/job');
 const { json } = require('express/lib/response');
 const { clear } = require('console');
-let arrayOfProjectTrsBoardObjects;
+let arrayOfProjectTrsBoardObjects; // Used in getProjectTRSBoardProjectData();
 let trashPsCodes = [];
 let harvestObjectsToSendToMonday = [];
 //TODO: Revisit below variables and consider removing.
@@ -153,50 +153,52 @@ Object.assign(module.exports, {
     }
   },
   getProjectTRSBoardProjectData: async (req, res, next)=>{
-    const projectTrsBoard = 2495489300;
-    const projectTRSBoardObjectsCollection = []
-
-    let query = `{
-      boards (ids: ${projectTrsBoard}) {
-        items {
-          id
-          name
-          column_values {
+    //Note: Required in order to create Linked Items via their IDs.
+    console.log("Pulling ProjectTRS board projects, to match with Harvest PS Codes.");
+    {
+      const projectTrsBoard = 2495489300;
+      const projectTRSBoardObjectsCollection = []
+      let query = `{
+        boards (ids: ${projectTrsBoard}) {
+          items {
             id
-            title
-            value
+            name
+            column_values {
+              id
+              title
+              value
+            }
           }
         }
-      }
-    }`;
-
-    await axios.post("https://api.monday.com/v2",  {
-      'query': query,
-    },
-    {
-      headers: {
-        'Content-Type': `application/json`,
-        'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
+      }`;
+  
+      await axios.post("https://api.monday.com/v2",  {
+        'query': query,
       },
-    })
-    .then((response)=>{
-
-      const projectTrsItemsNameIdColumnObjects = response.data.data.boards[0].items
-
-      projectTrsItemsNameIdColumnObjects.map((anItem)=>{
-        projectTRSBoardObjectsCollection.push(anItem)
+      {
+        headers: {
+          'Content-Type': `application/json`,
+          'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
+        },
       })
-      arrayOfProjectTrsBoardObjects = projectTRSBoardObjectsCollection
+      .then((response)=>{
+  
+        const projectTrsItemsNameIdColumnObjects = response.data.data.boards[0].items
+  
+        projectTrsItemsNameIdColumnObjects.map((anItem)=>{
+          projectTRSBoardObjectsCollection.push(anItem)
+        })
+        arrayOfProjectTrsBoardObjects = projectTRSBoardObjectsCollection
+  
+        next()
+      })
+      .catch((error)=>{
+        console.log('Here is my error:' + error, 'error');
+      })
 
+      console.log(`Total ProjectTRS Board Items Collected: ` + arrayOfProjectTrsBoardObjects.length)
       next()
-    })
-    .catch((error)=>{
-      console.log('Here is my error:' + error, 'error');
-    })
-
-    console.log(`Total ProjectTRS Board Items Collected: ` + arrayOfProjectTrsBoardObjects.length)
-
-    next()
+    }
   },
   compareHarvestCSVAndProjectTRSBoard: async (req, res, next)=> {
     var arrayOfaHarvestObjects = res.locals.arrayOfaHarvestObjects;

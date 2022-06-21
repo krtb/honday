@@ -303,9 +303,6 @@ Object.assign(module.exports, {
   },
   postMondayItems: async (req, res, next)=> {    
     let arrayOfMondayItemsToCreate = harvestObjectsToSendToMonday;
-    debugger
-    console.log(arrayOfMondayItemsToCreate, `<--- logging my test case here: arrayOfMondayItemsToCreate ---`);
-
     const mondayURL= "https://api.monday.com/v2";
     const devMondayBoardID = 2635507777;
     let query = `mutation ( 
@@ -321,12 +318,10 @@ Object.assign(module.exports, {
     )
     {id}
     }`;
-
-    //TODO: Find out why Joe and Austin returned as undefined.
     let myFormattedTimeTrackingItems = arrayOfMondayItemsToCreate.map((aItem)=> {
-      
       if( aItem.matchingHarvestUserInMonday){
         let mondayObjects = JSON.stringify({
+
           "boardId": devMondayBoardID,
           "myItemName": aItem.timeTrackingItemTitle,
           "column_values": JSON.stringify({
@@ -339,44 +334,39 @@ Object.assign(module.exports, {
         });
         return mondayObjects;
       }
-
     })
     let mondayContainer = myFormattedTimeTrackingItems;
-    // Post Items, with 1 second pause, to Monday.com API
     const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
-    async function loadAPIRequestsWithDelayTimer() { // We need to wrap the loop in a asynchronus function for this to work
+    console.log(arrayOfMondayItemsToCreate, `<--- arrayOfMondayItemsToCreate after reformat ---`);
+
+    async function loadAPIRequestsWithDelayTimer() {
+      //Note: Send POST request with 1 second delay to avoid server timeout. Loop must be wrapped in a async function.
       for (var i = 0; i <= mondayContainer.length - 1; mondayContainer[i++]) {
-        
-        // console.log(myFormattedTimeTrackingItems[i], `<--- logging my test case here: myFormattedTimeTrackingItems[i] ---`);
+        axios.post(mondayURL,
+        {
+          'query': query,
+          'variables': myFormattedTimeTrackingItems[i]
+        }, 
+        {
+          headers: {
+            'Content-Type': `application/json`,
+            'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
+          },
+        }
+        )
+        .then((response)=>{
+          let serverResponse = response.data.errors? response.errors[0] : "Status: Success, Item Created."
+          console.log(serverResponse);
 
-          axios.post(mondayURL, {
-            'query': query,
-            'variables': myFormattedTimeTrackingItems[i]
-          }, {
-              headers: {
-                'Content-Type': `application/json`,
-                'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
-              },
-          })
-          .then((response)=>{
-            let serverResponse = response.data.errors? response.errors[0] : "No Error"
-            console.log(serverResponse, `<--- logging my test case here: serverResponse ---`);
-            return response
-          })
-          .catch((error)=> {
-            debugger
-            'There was an error here: ' + error, 'TESTING THIS'
-          })
-        
-
-        // When the engine reaches the await part, it sets a timeout and halts the execution of the async function.
-        await timer(1000); // Then the created Promise can be awaited
-        // Finally the timeout completes & execution continues at this point. 
+          return response
+        })
+        .catch((error)=> {
+          'There was an error in loadAPIRequestsWithDelayTimer(): ' + error
+        })
+        await timer(1000); // Note: Timeout set, execution halted, when timeout completes, restart.
       }
       console.log('=============== Creating Items Complete! ================');
-      //TODO: added return statement to prevent repeat calls if page refreshed.
-      return
-      next()
+      return //Note: Break from sending requests.
     }
     loadAPIRequestsWithDelayTimer()
   },

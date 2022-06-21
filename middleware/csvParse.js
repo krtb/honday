@@ -6,7 +6,7 @@ const { json } = require('express/lib/response');
 const { clear } = require('console');
 let arrayOfProjectTrsBoardObjects; // Used in getProjectTRSBoardProjectData();
 let trashPsCodes = [];
-let harvestObjectsToSendToMonday = [];
+let harvestObjectsToSendToMonday = []; // Used in formatMondayTimeTrackingObj();
 //TODO: Revisit below variables and consider removing.
 let arrayOfProjectTrsPSCodes = [];
 
@@ -182,14 +182,12 @@ Object.assign(module.exports, {
         },
       })
       .then((response)=>{
-  
         const projectTrsItemsNameIdColumnObjects = response.data.data.boards[0].items
   
         projectTrsItemsNameIdColumnObjects.map((anItem)=>{
           projectTRSBoardObjectsCollection.push(anItem)
         })
         arrayOfProjectTrsBoardObjects = projectTRSBoardObjectsCollection
-  
         next()
       })
       .catch((error)=>{
@@ -201,121 +199,107 @@ Object.assign(module.exports, {
     }
   },
   compareHarvestCSVAndProjectTRSBoard: async (req, res, next)=> {
-    var arrayOfaHarvestObjects = res.locals.arrayOfaHarvestObjects;
-    const arrayOfHarvestPsCodes = [];
+    var arrayOfaHarvestObjects = res.locals.arrayOfaHarvestObjects; //Note: Set in parseCSV() function
 
-    // Utility Functions
-    function removeQuotedString(item) {
-      return item.replace(/['"]+/g, '');
-    }
+    {
+      //Note: Utility Functions
+      function getTodaysDate() {
+        let dateOfToday = new Date();
+        // Transform into ISO format, like this => 2022-01-04
+        let todaysDateIsoUtcTimezone = function ISODateString(datOfToday) {
+          function pad(n) {return n<10 ? '0'+n : n}
+          return datOfToday.getUTCFullYear()+'-'
+              + pad(datOfToday.getUTCMonth()+1)+'-'
+              + pad(datOfToday.getUTCDate())
+        }(dateOfToday)
+        return todaysDateIsoUtcTimezone
+      }
 
-    function matchTrsItem(oneHarvestItem) {
-      let harvestPsCode = oneHarvestItem.ProjectCode;
-      // let arrayOfProjectTrsPSCodes = [];
-      // let trashPsCodes = []
+      function removeQuotedString(item) {
+        return item.replace(/['"]+/g, '');
+      }
 
-      let foundID = _.find(arrayOfProjectTrsBoardObjects, (mondayTrsItem) => {
-
-        let psCodeColumnObject = mondayTrsItem.column_values[9].value;
+      function matchTrsItem(oneHarvestItem) {
+        //Note: Matches Monday.com Project PS Code with Harvest CSV PS Code
+        let harvestPsCode = oneHarvestItem.ProjectCode;
+        let foundID = _.find(arrayOfProjectTrsBoardObjects, (mondayTrsItem) => {
+          let psCodeColumnObject = mondayTrsItem.column_values[9].value;
 
           if (psCodeColumnObject === null || psCodeColumnObject === undefined) {
-            // return mondayTrsItem.id
-            // console.log(mondayTrsItem.id, `<--- logging my test case here: mondayTrsItem.id ---`);
             trashPsCodes.push(mondayTrsItem.id)
-
           } else if(removeQuotedString(psCodeColumnObject) === harvestPsCode) {
-            // return mondayTrsItem
             let myMondayHarvest = {
               oneHarvestItem,
               mondayTrsItem
             }
-            // let foundMondayObject = parseFloat(mondayTrsItem);
-            // arrayOfProjectTrsPSCodes.push(myMondayHarvest);
             return myMondayHarvest
           } else {
             trashPsCodes.push(mondayTrsItem.id)
           }
-      })
-
-      return foundID
-    }
-
-    function getTodaysDate () {
-      let dateOfToday = new Date();
-      // Transform into ISO format, like this => 2022-01-04
-      let todaysDateIsoUtcTimezone = function ISODateString(datOfToday) {
-        function pad(n) {return n<10 ? '0'+n : n}
-        return datOfToday.getUTCFullYear()+'-'
-            + pad(datOfToday.getUTCMonth()+1)+'-'
-            + pad(datOfToday.getUTCDate())
-      }(dateOfToday)
-      return todaysDateIsoUtcTimezone
-    }
-
-    function findHarvestUserMondayId(allMondayUsersContainer, harvestUser) {
-      //TODO: Find out why 2 user emails are not filtered through
-      // console.log(harvestUser, '<----------------- MONDAY USER');
-
-      const matchedUser = _.find(allMondayUsersContainer, (aSingleMondayUser)=>{
-
-        let lowerCasedMondayUserName = aSingleMondayUser.name.toLowerCase();
-        let lowerCasedHarvestUserName = harvestUser.toLowerCase();
-
-        let validateMondayUser = lowerCasedMondayUserName !== null || undefined? lowerCasedMondayUserName : null;
-
-        if((validateMondayUser === lowerCasedHarvestUserName)){
-          //TODO: Check types here, are different. Austing and Joe pending.
-          return aSingleMondayUser  
-        }
-      })
-      return matchedUser
-    }
-
-    // Main Functions Below --->
-    function formatMondayTimeTrackingObj(aHarvestObj, matchedItem) {
-      const harvestUser = `${aHarvestObj.FirstName} ${aHarvestObj.LastName}`;
-      const timeTrackingItemTitle = `${aHarvestObj.FirstName} ${aHarvestObj.LastName} - ${aHarvestObj.Project} - ${aHarvestObj.Task}`;
-      const timeTrackingItemDate = aHarvestObj.Date;
-      const allMondayUsersContainer = res.locals.allMondayUsersContainer;
-      const matchingHarvestUserInMonday = findHarvestUserMondayId(allMondayUsersContainer, harvestUser);
-      let trsBoardObjectMatched = matchTrsItem(aHarvestObj)
-      const harvestUserHours = aHarvestObj.Hours;
-      const hoursApprovedBoolean = aHarvestObj.Approved;
-      let hoursApprovalCheckerHours =  hoursApprovedBoolean === "No"? 0 : harvestUserHours;
-      const harvestUserNotes = aHarvestObj.Notes;
-      // Both variables used in object construction.
-      let objectForMondayWithHarvestData
-      let justTrsId
-      if (trsBoardObjectMatched !== undefined) {
-        justTrsId = trsBoardObjectMatched.id
-
-        objectForMondayWithHarvestData = {
-          harvestUser,
-          timeTrackingItemTitle,
-          timeTrackingItemDate,
-          matchingHarvestUserInMonday,
-          harvestUserHours,
-          harvestUserNotes,
-          hoursApprovalCheckerHours,
-
-          justTrsId
-        };
-        harvestObjectsToSendToMonday.push(objectForMondayWithHarvestData)
+        })
+        return foundID
       }
 
+      //Note: Matches Harvest User with Monday User ID
+      function findHarvestUserMondayId(allMondayUsersContainer, harvestUser) {
+        const matchedUser = _.find(allMondayUsersContainer, (aSingleMondayUser)=>{
+          let lowerCasedMondayUserName = aSingleMondayUser.name.toLowerCase();
+          let lowerCasedHarvestUserName = harvestUser.toLowerCase();
+          let validateMondayUser = lowerCasedMondayUserName !== null || undefined? lowerCasedMondayUserName : null;
+
+          if((validateMondayUser === lowerCasedHarvestUserName)){
+            return aSingleMondayUser  
+          }
+        })
+        return matchedUser
+      }
     }
 
-    // Map over Harvest Objects from CSV
-    arrayOfaHarvestObjects.map((aHarvestObj)=>{
-      //TODO: Remove matchTrsItem(), not being used here. Used inside of below function.
-      let matchedItem = matchTrsItem(aHarvestObj);
-      let formattedMondayObject = formatMondayTimeTrackingObj(aHarvestObj, matchedItem)
-    });
+    {
+      //Note: formatMondayTimeTrackingObj() function main worker, map() below loops through all Harvest Time Entries.
+      function formatMondayTimeTrackingObj(aHarvestObj) {
+        const harvestUser = `${aHarvestObj.FirstName} ${aHarvestObj.LastName}`;
+        const timeTrackingItemTitle = `${aHarvestObj.FirstName} ${aHarvestObj.LastName} - ${aHarvestObj.Project} - ${aHarvestObj.Task}`;
+        const timeTrackingItemDate = aHarvestObj.Date;
+        const allMondayUsersContainer = res.locals.allMondayUsersContainer;
+        const matchingHarvestUserInMonday = findHarvestUserMondayId(allMondayUsersContainer, harvestUser);
+        let trsBoardObjectMatched = matchTrsItem(aHarvestObj)
+        const harvestUserHours = aHarvestObj.Hours;
+        const hoursApprovedBoolean = aHarvestObj.Approved;
+        let hoursApprovalCheckerHours =  hoursApprovedBoolean === "No"? 0 : harvestUserHours;
+        const harvestUserNotes = aHarvestObj.Notes;
 
-    // Global variable declared at top level of file.
-    res.locals.harvestObjectsToSendToMonday =  harvestObjectsToSendToMonday;
-    console.log(`${harvestObjectsToSendToMonday.length} Items ready to be sent to Monday.`);
-    next()
+        {
+          let objectForMondayWithHarvestData
+          let justTrsId
+
+          if (trsBoardObjectMatched !== undefined) {
+            justTrsId = trsBoardObjectMatched.id
+
+            objectForMondayWithHarvestData = {
+              harvestUser,
+              timeTrackingItemTitle,
+              timeTrackingItemDate,
+              matchingHarvestUserInMonday,
+              harvestUserHours,
+              harvestUserNotes,
+              hoursApprovalCheckerHours,
+
+              justTrsId
+            };
+            harvestObjectsToSendToMonday.push(objectForMondayWithHarvestData)
+          }
+        }
+
+      }
+      //Note: Set in parseCSV() function.
+      arrayOfaHarvestObjects.map((aHarvestObj)=>{
+        formatMondayTimeTrackingObj(aHarvestObj)
+      });
+      res.locals.harvestObjectsToSendToMonday =  harvestObjectsToSendToMonday;
+      console.log(`${harvestObjectsToSendToMonday.length} Items ready to be sent to Monday.`);
+      next()
+    }
   },
   postMondayItems: async (req, res, next)=> {    
     let arrayOfMondayItemsToCreate = harvestObjectsToSendToMonday;

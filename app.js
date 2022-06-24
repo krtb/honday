@@ -22,7 +22,8 @@ const {
   getProjectTRSBoardProjectData, 
   compareHarvestCSVAndProjectTRSBoard,
   getUserFromMonday,
-  viewMondayBoardValues, 
+  viewMondayBoardValues,
+  sumLastFiscalYear, 
   postMondayItems, 
   getHarvestCSVData,
 } = require('./middleware/csvParse');
@@ -67,7 +68,8 @@ app.use(getUserFromMonday);
 app.use(parseCSV);
 app.use(getProjectTRSBoardProjectData);
 app.use(compareHarvestCSVAndProjectTRSBoard);
-app.use(postMondayItems);
+app.use(sumLastFiscalYear);
+// app.use(postMondayItems);
 
 //----------------> Harvest API
 // app.use(getAllUsersToFilterIDs);

@@ -334,7 +334,7 @@ Object.assign(module.exports, {
           newObject.totalHarvestUserHours = anItem.harvestUserHours
 
           finalArrayOfItems.push(newObject)
-          console.log('No condition met');
+          console.log('New project added to array that did not exist previously.');
       }
     });
 

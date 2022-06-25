@@ -70,11 +70,10 @@ Object.assign(module.exports, {
     console.log("===> Pulling Monday.com items to DELETE. <====");
 
     {
-      const mainDeleteionBoard = 2635507777;
-      const mainBoardItemsToDelete = []
+      const itemsToDeleteBoardId = 2635507777;
 
       let query = `{
-        boards (ids: ${mainDeleteionBoard}) {
+        boards (ids: ${itemsToDeleteBoardId}) {
           items {
             id
           }
@@ -104,41 +103,45 @@ Object.assign(module.exports, {
   },
   deleteBoardItems: async (req, res, next)=>{
     console.log('Starting deletion of Monday.com board items.');
-    const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
 
-    async function loadAPIRequestsWithDelayTimer() {
-      //Note: Send POST request with 1 second delay to avoid server timeout. Loop must be wrapped in a async function.
-      for (var i = 0; i <= boardItemsToDelete.length - 1; boardItemsToDelete[i++]) {
-        console.log(`Deleting board item ${i} of ${boardItemsToDelete.length - 1}`);
+    {
+      const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
 
-        let query = `mutation { delete_item (item_id: ${boardItemsToDelete[i].id}) { id }}`;
-        axios.post("https://api.monday.com/v2",
-        {
-          'query': query,
-          'variables': boardItemsToDelete[i]
-        }, 
-        {
-          headers: {
-            'Content-Type': `application/json`,
-            'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
-          },
+      async function loadAPIRequestsWithDelayTimer() {
+        //Note: Send POST request with 1 second delay to avoid server timeout. Loop must be wrapped in a async function.
+        for (var i = 0; i <= boardItemsToDelete.length - 1; boardItemsToDelete[i++]) {
+          console.log(`Deleting board item ${i} of ${boardItemsToDelete.length - 1}`);
+
+          let query = `mutation { delete_item (item_id: ${boardItemsToDelete[i].id}) { id }}`;
+          axios.post("https://api.monday.com/v2",
+          {
+            'query': query,
+            'variables': boardItemsToDelete[i]
+          }, 
+          {
+            headers: {
+              'Content-Type': `application/json`,
+              'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
+            },
+          }
+          )
+          .then((response)=>{
+            let serverResponse = response.data.errors? response.errors[0] : "Status: Success, item deleted!"
+            console.log(serverResponse);
+
+            return response
+          })
+          .catch((error)=> {
+            'There was an error in loadAPIRequestsWithDelayTimer(): ' + error
+          })
+          await timer(1000); // Note: Timeout set, execution halted, when timeout completes, restart.
         }
-        )
-        .then((response)=>{
-          let serverResponse = response.data.errors? response.errors[0] : "Status: Success, item deleted!"
-          console.log(serverResponse);
-
-          return response
-        })
-        .catch((error)=> {
-          'There was an error in loadAPIRequestsWithDelayTimer(): ' + error
-        })
-        await timer(1000); // Note: Timeout set, execution halted, when timeout completes, restart.
+        console.log(`===============> Finished deleting items! <================`);
+        return //Note: Break from sending requests.
       }
-      console.log('===============> Deleting Items Complete! <================');
-      return //Note: Break from sending requests.
+      loadAPIRequestsWithDelayTimer()
     }
-    loadAPIRequestsWithDelayTimer()
+    
   },
   parseCSV: async (req, res, next) =>{
     console.log("Read Harvest CSV, map and transform values.");

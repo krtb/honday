@@ -65,7 +65,7 @@ Object.assign(module.exports, {
       next();
     }
   },
-  getMainBoardItemsToDelete: async (req, res, next)=>{
+  getMondayItemIds: async (req, res, next)=>{
     //Note: Required in order to create Linked Items via their IDs.
     console.log("===> Pulling Monday.com items to DELETE. <====");
 

@@ -18,7 +18,7 @@ const cron = require('node-cron');
 
 /* Parse CSV file */
 const { 
-  getMainBoardItemsToDelete,
+  getMondayBoardItemIds,
   deleteBoardItems,
   parseCSV,
   getProjectTRSBoardProjectData, 
@@ -66,7 +66,7 @@ console.log('Honday Bot is Starting Work')
 //Note: To find which column value types to create
 //app.use(viewMondayBoardValues); TODO: find pulse ids, to pass into TRS board.
 //Note: To delete items from a board.
-app.use(getMainBoardItemsToDelete);
+app.use(getMondayBoardItemIds);
 app.use(deleteBoardItems);
 // app.use(getUserFromMonday);
 // app.use(parseCSV);

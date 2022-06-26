@@ -65,7 +65,7 @@ Object.assign(module.exports, {
       next();
     }
   },
-  getMondayItemIds: async (req, res, next)=>{
+  getMondayBoardItemIds: async (req, res, next)=>{
     //Note: Required in order to create Linked Items via their IDs.
     console.log("===> Pulling Monday.com items to DELETE. <====");
 
@@ -351,6 +351,7 @@ Object.assign(module.exports, {
         const hoursApprovedBoolean = aHarvestObj.Approved;
         let hoursApprovalCheckerHours =  hoursApprovedBoolean === "No"? 0 : harvestUserHours;
         const harvestUserNotes = aHarvestObj.Notes;
+        const projectCode = aHarvestObj.ProjectCode;
 
         {
           let objectForMondayWithHarvestData
@@ -367,6 +368,7 @@ Object.assign(module.exports, {
               harvestUserHours,
               harvestUserNotes,
               hoursApprovalCheckerHours,
+              projectCode,
 
               justTrsId
             };
@@ -396,29 +398,44 @@ Object.assign(module.exports, {
     timeEntriesFY2021.map(function (anItem, index, arr){
       let foundDuplicateItem = finalArrayOfItems.find(existingItem => existingItem.justTrsId == anItem.justTrsId);
 
+      function utilInsertPSCode(anItem, itemObject) {
+        let getArrayOfTitle = anItem.timeTrackingItemTitle.split('-')
+        getArrayOfTitle.splice(2,0, `${anItem.projectCode}`);
+        itemObject.timeTrackingItemTitle = getArrayOfTitle.join(' - ')
+
+        return itemObject.timeTrackingItemTitle
+      }
+
+      function utilUpdateProjectObject(originalItemObject, newItemObject){
+        originalItemObject.justTrsId = newItemObject.justTrsId;
+        originalItemObject.timeTrackingItemTitle = utilInsertPSCode(newItemObject, originalItemObject)
+        originalItemObject.totalHarvestUserHours = newItemObject.harvestUserHours
+        
+        return originalItemObject
+      }
+
       if (foundDuplicateItem !== undefined) {
+        //Note: Replaces original project user hours, with most recent summed valued.
         let currentTotalHoursForProject = parseFloat(foundDuplicateItem.totalHarvestUserHours);
         let newHoursFromSimilarProject = parseFloat(anItem.harvestUserHours);
         let totalNewHoursToAdd = (currentTotalHoursForProject + newHoursFromSimilarProject).toString();
 
-        foundDuplicateItem.justTrsId = anItem.justTrsId;
-        foundDuplicateItem.timeTrackingItemTitle = anItem.timeTrackingItemTitle;
+        foundDuplicateItem = utilUpdateProjectObject(foundDuplicateItem, anItem)
         foundDuplicateItem.totalHarvestUserHours = totalNewHoursToAdd;
 
+        console.log('Project hours compiled.');
       } else {
         let newObject = {};
 
-          newObject.justTrsId = anItem.justTrsId
-          newObject.timeTrackingItemTitle = anItem.timeTrackingItemTitle
-          newObject.totalHarvestUserHours = anItem.harvestUserHours
+        newObject = utilUpdateProjectObject(newObject, anItem);
+        finalArrayOfItems.push(newObject)
 
-          finalArrayOfItems.push(newObject)
-          console.log('New project added to array that did not exist previously.');
+        console.log('New project added to array that did not exist previously.');
       }
     });
 
     finalArrayOfItems // Note: Contains array of unqiue projects, with their totalUserHours compiled.
-
+    debugger
   },
   postMondayItems: async (req, res, next)=> {    
     let arrayOfMondayItemsToCreate = harvestObjectsToSendToMonday;

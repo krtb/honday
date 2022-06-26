@@ -66,13 +66,14 @@ console.log('Honday Bot is Starting Work')
 //Note: To find which column value types to create
 //app.use(viewMondayBoardValues); TODO: find pulse ids, to pass into TRS board.
 //Note: To delete items from a board.
-app.use(getMondayBoardItemIds);
-app.use(deleteBoardItems);
-// app.use(getUserFromMonday);
-// app.use(parseCSV);
-// app.use(getProjectTRSBoardProjectData);
-// app.use(compareHarvestCSVAndProjectTRSBoard);
-// app.use(sumLastFiscalYear);
+// app.use(getMondayBoardItemIds);
+// app.use(deleteBoardItems);
+
+app.use(getUserFromMonday);
+app.use(parseCSV);
+app.use(getProjectTRSBoardProjectData);
+app.use(compareHarvestCSVAndProjectTRSBoard);
+app.use(sumLastFiscalYear);
 // app.use(postMondayItems);
 
 //----------------> Harvest API

@@ -395,7 +395,7 @@ Object.assign(module.exports, {
       }
     })
 
-    timeEntriesFY2021.map(function (anItem, index, arr){
+    timeEntriesFY2021.map(function (anItem){
       let foundDuplicateItem = finalArrayOfItems.find(existingItem => existingItem.justTrsId == anItem.justTrsId);
 
       function utilInsertPSCode(anItem, itemObject) {
@@ -410,7 +410,7 @@ Object.assign(module.exports, {
         originalItemObject.justTrsId = newItemObject.justTrsId;
         originalItemObject.timeTrackingItemTitle = utilInsertPSCode(newItemObject, originalItemObject)
         originalItemObject.totalHarvestUserHours = newItemObject.harvestUserHours
-        
+
         return originalItemObject
       }
 

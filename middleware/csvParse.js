@@ -6,7 +6,7 @@ const { json } = require('express/lib/response');
 const { clear } = require('console');
 let arrayOfProjectTrsBoardObjects; // Used in getProjectTRSBoardProjectData();
 let trashPsCodes = [];
-let harvestObjectsToSendToMonday = []; // Used in formatMondayTimeTrackingObj();
+let harvestTimeEntriesAndMondayUser = []; // Used in formatMondayTimeTrackingObj();
 //TODO: Revisit below variables and consider removing.
 let arrayOfProjectTrsPSCodes = [];
 let projectsWithTotalHours = [];
@@ -341,11 +341,14 @@ Object.assign(module.exports, {
     {
       //Note: formatMondayTimeTrackingObj() function main worker, map() below loops through all Harvest Time Entries.
       function formatMondayTimeTrackingObj(aHarvestObj) {
+
         const harvestUser = `${aHarvestObj.FirstName} ${aHarvestObj.LastName}`;
         const timeTrackingItemTitle = `${aHarvestObj.FirstName} ${aHarvestObj.LastName} - ${aHarvestObj.Project} - ${aHarvestObj.Task}`;
         const timeTrackingItemDate = aHarvestObj.Date;
+
         const allMondayUsersContainer = res.locals.allMondayUsersContainer;
         const matchingHarvestUserInMonday = findHarvestUserMondayId(allMondayUsersContainer, harvestUser);
+
         let trsBoardObjectMatched = matchTrsItem(aHarvestObj)
         const harvestUserHours = aHarvestObj.Hours;
         const hoursApprovedBoolean = aHarvestObj.Approved;
@@ -354,13 +357,14 @@ Object.assign(module.exports, {
         const projectCode = aHarvestObj.ProjectCode;
 
         {
-          let objectForMondayWithHarvestData
+          let timeEntryWithMatchedMondayUser
           let justTrsId
 
           if (trsBoardObjectMatched !== undefined) {
             justTrsId = trsBoardObjectMatched.id
 
-            objectForMondayWithHarvestData = {
+            timeEntryWithMatchedMondayUser = {
+
               harvestUser,
               timeTrackingItemTitle,
               timeTrackingItemDate,
@@ -372,7 +376,8 @@ Object.assign(module.exports, {
 
               justTrsId
             };
-            harvestObjectsToSendToMonday.push(objectForMondayWithHarvestData)
+
+            harvestTimeEntriesAndMondayUser.push(timeEntryWithMatchedMondayUser)
           }
         }
 
@@ -381,15 +386,15 @@ Object.assign(module.exports, {
       arrayOfaHarvestObjects.map((aHarvestObj)=>{
         formatMondayTimeTrackingObj(aHarvestObj)
       });
-      res.locals.harvestObjectsToSendToMonday =  harvestObjectsToSendToMonday;
-      console.log(`${harvestObjectsToSendToMonday.length} Items ready to be sent to Monday.`);
+      res.locals.harvestTimeEntriesAndMondayUser =  harvestTimeEntriesAndMondayUser;
+      console.log(`${harvestTimeEntriesAndMondayUser.length} Items ready to be sent to Monday.`);
       next()
     }
   },
   sumLastFiscalYear: async (res,req,next)=>{
     // Note: Pulls out all time entries from FY2021/June 31st, 2021 into an array.
     const timeEntriesFY2021 = [];
-    harvestObjectsToSendToMonday.map((aHarvestTimeEntry)=>{
+    harvestTimeEntriesAndMondayUser.map((aHarvestTimeEntry)=>{
       if(aHarvestTimeEntry.timeTrackingItemDate <= '2022-01-31'){        
         timeEntriesFY2021.push(aHarvestTimeEntry)
       }
@@ -437,8 +442,9 @@ Object.assign(module.exports, {
     projectsWithTotalHours // Note: Contains array of unqiue projects, with their totalUserHours compiled.
   },
   postMondayItems: async (req, res, next)=> {    
-    harvestObjectsToSendToMonday
-    let arrayOfMondayItemsToCreate = projectsWithTotalHours;
+    let arrayOfSingularProjectTimeEntries = undefined; //Note: uncomment variable when required - harvestTimeEntriesAndMondayUser
+    let arrayOfSumProjectTotals = projectsWithTotalHours;
+    let myFormattedTimeTrackingItems
 
     const mondayURL= "https://api.monday.com/v2";
     const devMondayBoardID = 2635507777;
@@ -455,29 +461,55 @@ Object.assign(module.exports, {
     )
     {id}
     }`;
-    let myFormattedTimeTrackingItems = arrayOfMondayItemsToCreate.map((aItem)=> {
-      if( aItem.matchingHarvestUserInMonday){        let mondayObjects = JSON.stringify({
+
+    //TODO: combine arrays of time entries into one, then loop through and create on if/else
+    if (arrayOfSingularProjectTimeEntries !== undefined) {
+
+      myFormattedTimeTrackingItems = arrayOfSingularProjectTimeEntries.map((aTimeEntryAndMondayUser)=> {
+
+        if(aTimeEntryAndMondayUser.matchingHarvestUserInMonday){       
+
+        let aMondayTimeEntrySingularHours = JSON.stringify({
 
           "boardId": devMondayBoardID,
-          "myItemName": aItem.timeTrackingItemTitle,
+          "myItemName": aTimeEntryAndMondayUser.timeTrackingItemTitle,
           "column_values": JSON.stringify({
-            "person": {"personsAndTeams":[{"id": aItem.matchingHarvestUserInMonday.id ,"kind":"person"}]},
-            "date4": {"date": aItem.timeTrackingItemDate},
-            "numbers": aItem.harvestUserHours,
-            "notes75": aItem.harvestUserNotes,
-            "connect_boards5": {"changed_at":"2022-05-11T17:16:52.729Z","linkedPulseIds":[{"linkedPulseId": parseFloat(aItem.justTrsId)}]}
+            "person": {"personsAndTeams":[{"id": aTimeEntryAndMondayUser.matchingHarvestUserInMonday.id ,"kind":"person"}]},
+            "date4": {"date": aTimeEntryAndMondayUser.timeTrackingItemDate},
+            "numbers": aTimeEntryAndMondayUser.harvestUserHours,
+            "notes75": aTimeEntryAndMondayUser.harvestUserNotes,
+            "connect_boards5": {"changed_at":"2022-05-11T17:16:52.729Z","linkedPulseIds":[{"linkedPulseId": parseFloat(aTimeEntryAndMondayUser.justTrsId)}]}
           })
         });
-        return mondayObjects;
-      }
-    })
-    let mondayContainer = myFormattedTimeTrackingItems;
+        
+        return aMondayTimeEntrySingularHours;
+
+        }
+      })
+
+    } else {
+      myFormattedTimeTrackingItems = arrayOfSumProjectTotals.map((aProjectAndTotalHours)=> {
+        let mondayProjectHoursTotaled = JSON.stringify({
+          
+          "boardId": devMondayBoardID,
+          "myItemName": aProjectAndTotalHours.timeTrackingItemTitle,
+          "column_values": JSON.stringify({
+            "numbers": aProjectAndTotalHours.totalHarvestUserHours,
+            "connect_boards5": {"changed_at":"2022-05-11T17:16:52.729Z","linkedPulseIds":[{"linkedPulseId": parseFloat(aProjectAndTotalHours.justTrsId)}]}
+          })
+        });
+        
+        return mondayProjectHoursTotaled;
+
+      })
+    }
+
     const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
-    console.log(arrayOfMondayItemsToCreate, `<--- arrayOfMondayItemsToCreate after reformat ---`);
+    console.log(myFormattedTimeTrackingItems, `<--- myFormattedTimeTrackingItems Count: ${myFormattedTimeTrackingItems.length - 1} ---`);
 
     async function loadAPIRequestsWithDelayTimer() {
       //Note: Send POST request with 1 second delay to avoid server timeout. Loop must be wrapped in a async function.
-      for (var i = 0; i <= mondayContainer.length - 1; mondayContainer[i++]) {
+      for (var i = 0; i <= myFormattedTimeTrackingItems.length - 1; myFormattedTimeTrackingItems[i++]) {
         axios.post(mondayURL,
         {
           'query': query,
@@ -501,9 +533,14 @@ Object.assign(module.exports, {
         })
         await timer(1000); // Note: Timeout set, execution halted, when timeout completes, restart.
       }
-      console.log('=============== Creating Items Complete! ================');
+
+      //Note: Change output based on array being pushed to Monday.com
+      arrayOfSingularProjectTimeEntries !== undefined? 
+      console.log('=============== Creating Project Totals Complete! ================'):  
+      console.log('=============== Creating Single Time Entries Complete! ================')
       return //Note: Break from sending requests.
     }
     loadAPIRequestsWithDelayTimer()
+
   },
 })

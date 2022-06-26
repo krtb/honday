@@ -9,7 +9,7 @@ let trashPsCodes = [];
 let harvestObjectsToSendToMonday = []; // Used in formatMondayTimeTrackingObj();
 //TODO: Revisit below variables and consider removing.
 let arrayOfProjectTrsPSCodes = [];
-let finalArrayOfItems = [];
+let projectsWithTotalHours = [];
 let boardItemsToDelete = [];
 
 // Quirks with using module.exports, when modules circularly depend on each other.
@@ -389,18 +389,18 @@ Object.assign(module.exports, {
   sumLastFiscalYear: async (res,req,next)=>{
     // Note: Pulls out all time entries from FY2021/June 31st, 2021 into an array.
     const timeEntriesFY2021 = [];
-    harvestObjectsToSendToMonday.map((anItem)=>{
-      if(anItem.timeTrackingItemDate <= '2022-01-31'){        
-        timeEntriesFY2021.push(anItem)
+    harvestObjectsToSendToMonday.map((aHarvestTimeEntry)=>{
+      if(aHarvestTimeEntry.timeTrackingItemDate <= '2022-01-31'){        
+        timeEntriesFY2021.push(aHarvestTimeEntry)
       }
     })
 
-    timeEntriesFY2021.map(function (anItem){
-      let foundDuplicateItem = finalArrayOfItems.find(existingItem => existingItem.justTrsId == anItem.justTrsId);
+    timeEntriesFY2021.map(function (fy2021TimeEntry){
+      let projectHoursTotaled = projectsWithTotalHours.find(existingItem => existingItem.justTrsId == fy2021TimeEntry.justTrsId);
 
-      function utilInsertPSCode(anItem, itemObject) {
-        let getArrayOfTitle = anItem.timeTrackingItemTitle.split('-')
-        getArrayOfTitle.splice(2,0, `${anItem.projectCode}`);
+      function utilInsertPSCode(fy2021TimeEntry, itemObject) {
+        let getArrayOfTitle = fy2021TimeEntry.timeTrackingItemTitle.split('-')
+        getArrayOfTitle.splice(2,0, `${fy2021TimeEntry.projectCode}`);
         itemObject.timeTrackingItemTitle = getArrayOfTitle.join(' - ')
 
         return itemObject.timeTrackingItemTitle
@@ -414,31 +414,32 @@ Object.assign(module.exports, {
         return originalItemObject
       }
 
-      if (foundDuplicateItem !== undefined) {
+      if (projectHoursTotaled !== undefined) {
         //Note: Replaces original project user hours, with most recent summed valued.
-        let currentTotalHoursForProject = parseFloat(foundDuplicateItem.totalHarvestUserHours);
-        let newHoursFromSimilarProject = parseFloat(anItem.harvestUserHours);
+        let currentTotalHoursForProject = parseFloat(projectHoursTotaled.totalHarvestUserHours);
+        let newHoursFromSimilarProject = parseFloat(fy2021TimeEntry.harvestUserHours);
         let totalNewHoursToAdd = (currentTotalHoursForProject + newHoursFromSimilarProject).toString();
 
-        foundDuplicateItem = utilUpdateProjectObject(foundDuplicateItem, anItem)
-        foundDuplicateItem.totalHarvestUserHours = totalNewHoursToAdd;
+        projectHoursTotaled = utilUpdateProjectObject(projectHoursTotaled, fy2021TimeEntry)
+        projectHoursTotaled.totalHarvestUserHours = totalNewHoursToAdd;
 
         console.log('Project hours compiled.');
       } else {
         let newObject = {};
 
-        newObject = utilUpdateProjectObject(newObject, anItem);
-        finalArrayOfItems.push(newObject)
+        newObject = utilUpdateProjectObject(newObject, fy2021TimeEntry);
+        projectsWithTotalHours.push(newObject)
 
         console.log('New project added to array that did not exist previously.');
       }
     });
 
-    finalArrayOfItems // Note: Contains array of unqiue projects, with their totalUserHours compiled.
-    debugger
+    projectsWithTotalHours // Note: Contains array of unqiue projects, with their totalUserHours compiled.
   },
   postMondayItems: async (req, res, next)=> {    
-    let arrayOfMondayItemsToCreate = harvestObjectsToSendToMonday;
+    harvestObjectsToSendToMonday
+    let arrayOfMondayItemsToCreate = projectsWithTotalHours;
+
     const mondayURL= "https://api.monday.com/v2";
     const devMondayBoardID = 2635507777;
     let query = `mutation ( 
@@ -455,8 +456,7 @@ Object.assign(module.exports, {
     {id}
     }`;
     let myFormattedTimeTrackingItems = arrayOfMondayItemsToCreate.map((aItem)=> {
-      if( aItem.matchingHarvestUserInMonday){
-        let mondayObjects = JSON.stringify({
+      if( aItem.matchingHarvestUserInMonday){        let mondayObjects = JSON.stringify({
 
           "boardId": devMondayBoardID,
           "myItemName": aItem.timeTrackingItemTitle,

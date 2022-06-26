@@ -74,7 +74,7 @@ app.use(parseCSV);
 app.use(getProjectTRSBoardProjectData);
 app.use(compareHarvestCSVAndProjectTRSBoard);
 app.use(sumLastFiscalYear);
-// app.use(postMondayItems);
+app.use(postMondayItems);
 
 //----------------> Harvest API
 // app.use(getAllUsersToFilterIDs);

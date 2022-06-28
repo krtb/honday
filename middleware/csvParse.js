@@ -4,7 +4,7 @@ const fs = require('fs');
 const { JobList } = require('twilio/lib/rest/bulkexports/v1/export/job');
 const { json } = require('express/lib/response');
 const { clear } = require('console');
-let onlyActivePsCodesArray = require('../createJson.json');
+let onlyActivePsCodesArray = require('../activePsCodes.json');
 console.log(onlyActivePsCodesArray, `<--- logging my test case here: onlyActivePsCodesArray ---`);
 
 let arrayOfProjectTrsBoardObjects; // Used in getProjectTRSBoardProjectData();

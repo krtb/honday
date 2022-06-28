@@ -77,8 +77,11 @@ app.use(getProjectTRSBoardProjectData);
 app.use(compareHarvestCSVAndProjectTRSBoard);
 // app.use(sumLastFiscalYear);
 app.use(postMondayItems);
+
+//Note: Reverse Link pulseIds
 // app.use(getMondayBoardItemIds);
 // app.use(getReverseTableIdsToLink);
+
 // app.use(reverseLinkMondayItems);
 //----------------> Harvest API
 // app.use(getAllUsersToFilterIDs);

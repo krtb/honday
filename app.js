@@ -18,6 +18,8 @@ const cron = require('node-cron');
 
 /* Parse CSV file */
 const { 
+  getReverseTableIdsToLink,
+  reverseLinkMondayItems,
   getMondayBoardItemIds,
   deleteBoardItems,
   parseCSV,
@@ -73,9 +75,11 @@ app.use(getUserFromMonday);
 app.use(parseCSV);
 app.use(getProjectTRSBoardProjectData);
 app.use(compareHarvestCSVAndProjectTRSBoard);
-app.use(sumLastFiscalYear);
+// app.use(sumLastFiscalYear);
 app.use(postMondayItems);
-
+// app.use(getMondayBoardItemIds);
+// app.use(getReverseTableIdsToLink);
+// app.use(reverseLinkMondayItems);
 //----------------> Harvest API
 // app.use(getAllUsersToFilterIDs);
 // app.use(getAllTimeEntries);

@@ -18,6 +18,7 @@ const cron = require('node-cron');
 
 /* Parse CSV file */
 const { 
+  getReverTableProjects,
   getReverseTableIdsToLink,
   reverseLinkMondayItems,
   getMondayBoardItemIds,
@@ -66,23 +67,32 @@ const {
 /*================ Time Entry Section ================*/
 console.log('Honday Bot is Starting Work')
 //Note: To find which column value types to create
-//app.use(viewMondayBoardValues); TODO: find pulse ids, to pass into TRS board.
-//Note: To delete items from a board.
+// app.use(viewMondayBoardValues);
+//  TODO: find pulse ids, to pass into TRS board.
+
+//TODO: Delete items from a board.
 // app.use(getMondayBoardItemIds);
 // app.use(deleteBoardItems);
 
+//TODO: CREATE NEW ITEMS
 app.use(getUserFromMonday);
 app.use(parseCSV);
 app.use(getProjectTRSBoardProjectData);
 app.use(compareHarvestCSVAndProjectTRSBoard);
-// app.use(sumLastFiscalYear);
 app.use(postMondayItems);
+
+// parseCSV,
+// getProjectTRSBoardProjectData, 
+// compareHarvestCSVAndProjectTRSBoard,
+// getUserFromMonday,
+// app.use(sumLastFiscalYear);
 
 //Note: Reverse Link pulseIds
 // app.use(getMondayBoardItemIds);
 // app.use(getReverseTableIdsToLink);
-
+// app.use(getReverTableProjects);
 // app.use(reverseLinkMondayItems);
+
 //----------------> Harvest API
 // app.use(getAllUsersToFilterIDs);
 // app.use(getAllTimeEntries);

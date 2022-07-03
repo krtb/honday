@@ -4,8 +4,7 @@ const fs = require('fs');
 const { JobList } = require('twilio/lib/rest/bulkexports/v1/export/job');
 const { json } = require('express/lib/response');
 const { clear } = require('console');
-let onlyActivePsCodesArray = require('../activePsCodes.json');
-console.log(onlyActivePsCodesArray, `<--- logging my test case here: onlyActivePsCodesArray ---`);
+let onlyArchivedPsCodesArray = require('../archivedPsCodes.json');
 
 let arrayOfProjectTrsBoardObjects; // Used in getProjectTRSBoardProjectData();
 let trashPsCodes = [];
@@ -16,8 +15,15 @@ let projectsWithTotalHours = [];
 let mondayBoardItemIds = [];
 let projectTrsItemsWithLinkedPulseIds = [];
 let timeEntryBoardItemColumnIds = [];
+let mondayBoardToItemsToReverseLinkTo = [];
 let fy2023Q1April = [];
 let validatedPSTimeEntries = [];
+let testThis = [];
+let entriesNotOnTRSBoard = [];
+let justJoesTimeEntries = [];
+let onlyArchivedProjects = [];
+let projectsMissingMondayUser = [];
+
 
 // Quirks with using module.exports, when modules circularly depend on each other.
 // It is recommended against replacing the object.
@@ -37,10 +43,12 @@ Object.assign(module.exports, {
     {
       const projectTrsBoard = 2495489300;
       const mainTimeTrackBoardProd = 2495489055;
+      const q2DuplicateBoard = 2887226992;
       const duplicateOfTimeTrackingBoard = 2635507777;
-      const viewBoardColumns = `query { boards (ids: ${duplicateOfTimeTrackingBoard}) { owner { id }  columns {   title   type }}}`;
+
+      const viewBoardColumns = `query { boards (ids: ${q2DuplicateBoard}) { owner { id }  columns {   title   type }}}`;
       let query = `{
-        boards (ids: ${duplicateOfTimeTrackingBoard}) {
+        boards (ids: ${q2DuplicateBoard}) {
           items {
             id
             name
@@ -64,7 +72,9 @@ Object.assign(module.exports, {
       },
       )
       .then((response)=>{
+        
         console.log(response)
+        
       })
       .catch((error)=>{
         console.log('Here is my error:' + error, 'error');
@@ -119,6 +129,7 @@ Object.assign(module.exports, {
           console.log(`Deleting board item ${i} of ${mondayBoardItemIds.length - 1}`);
 
           let query = `mutation { delete_item (item_id: ${mondayBoardItemIds[i].id}) { id }}`;
+
           axios.post("https://api.monday.com/v2",
           {
             'query': query,
@@ -162,12 +173,14 @@ Object.assign(module.exports, {
       const fs = require('fs');
       const { parse } = require('csv-parse');
       const { finished } = require('stream/promises'); // Note: The `stream/promises` module only works on Node.js => version 16^
-      const onlyCurrentHarvestProjects = './csvFiles/2022-06-27_harvest_time_export.csv';
+      const onlyCurrentHarvestProjects = './csvFiles/2022-07-01_harvest_time_export.csv'
+      // './csvFiles/2022-06-29_harvest_time_export.csv';
       // './csvFiles/2022-06-08_harvest_codes_for_monday.csv'; // older file, replacing with newer CSV above.
       const records = await [];
       const stream = fs.createReadStream(onlyCurrentHarvestProjects);
       const parser = stream.pipe(parse({ delimiter: ',', columns: true,}));
       let validatedHarvstTimeEntry
+
       parser.on('readable', () => {
         let record;
         while ((record = parser.read()) !== null) {
@@ -178,11 +191,11 @@ Object.assign(module.exports, {
       {
         // Create a copy of Records
         const allMyRecords = records;
-        const arrayOfaHarvestObjects = await allMyRecords.map((aSingleRecord)=>{
+        const arrayOfHarvestObjects = await allMyRecords.map((aSingleRecord)=>{
+          //TODO: Upadte Excel Sheet to contain all projects, from today
+          //TODO: Upadte DATE - May 1 TO Present.
+          if(aSingleRecord.Date >= '2022-05-01' && aSingleRecord.Date <= '2022-07-01'){
 
-          validatedHarvstTimeEntry = onlyActivePsCodesArray.activePSCodes.find((anActivePsCode) => aSingleRecord['Project Code'] == anActivePsCode && (aSingleRecord.Date >= '2022-02-01' && aSingleRecord.Date <= '2022-04-30'));
-
-          if(validatedHarvstTimeEntry !== undefined){
             const singleaHarvestObject = {
               'Date': aSingleRecord.Date,
               'Client': aSingleRecord.Client,
@@ -207,12 +220,15 @@ Object.assign(module.exports, {
               'ExternalReferenceURL': aSingleRecord['External Reference URL'],
             }
             validatedPSTimeEntries.push(singleaHarvestObject)
+          } else {
+            trashPsCodes.push(aSingleRecord)
           }
 
         });
 
-        res.locals.arrayOfaHarvestObjects = validatedPSTimeEntries;
-        console.log(`Collected ${arrayOfaHarvestObjects.length} line items from CSV file.`);
+        res.locals.arrayOfHarvestObjects = validatedPSTimeEntries;
+
+        console.log(`Collected ${arrayOfHarvestObjects.length} line items from CSV file.`);
       }
       next();
     }
@@ -248,7 +264,9 @@ Object.assign(module.exports, {
     //Note: Required in order to create Linked Items via their IDs.
     console.log("Pulling ProjectTRS board projects, to match with Harvest PS Codes.");
     {
+
       const projectTrsBoard = 2495489300;
+
       const projectTRSBoardObjectsCollection = []
       let query = `{
         boards (ids: ${projectTrsBoard}) {
@@ -274,24 +292,26 @@ Object.assign(module.exports, {
         },
       })
       .then((response)=>{
-        const projectTrsItemsNameIdColumnObjects = response.data.data.boards[0].items
-  
-        projectTrsItemsNameIdColumnObjects.map((anItem)=>{
-          projectTRSBoardObjectsCollection.push(anItem)
-        })
-        arrayOfProjectTrsBoardObjects = projectTRSBoardObjectsCollection
-        next()
+        //TODO: Extract below into compiled hours functionality.
+        // const projectTrsItemsNameIdColumnObjects = response.data.data.boards[0].items
+        // projectTrsItemsNameIdColumnObjects.map((anItem)=>{
+        //   projectTRSBoardObjectsCollection.push(anItem)
+        // })
+        //projectTRSBoardObjectsCollection
+
+        arrayOfProjectTrsBoardObjects = response.data.data.boards[0].items
+
       })
       .catch((error)=>{
         console.log('Here is my error:' + error, 'error');
       })
 
-      console.log(`Total ProjectTRS Board Items Collected: ` + arrayOfProjectTrsBoardObjects.length)
+      console.log(arrayOfProjectTrsBoardObjects.length + `: ProjectTRS Items Collected.`)
       next()
     }
   },
   compareHarvestCSVAndProjectTRSBoard: async (req, res, next)=> {
-    var arrayOfaHarvestObjects = res.locals.arrayOfaHarvestObjects; //Note: Set in parseCSV() function
+    var arrayOfHarvestObjects = [...new Set(res.locals.arrayOfHarvestObjects)];; //Note: Set in parseCSV() function
 
     {
       //Note: Utility Functions
@@ -315,16 +335,19 @@ Object.assign(module.exports, {
         //Note: Matches Monday.com Project PS Code with Harvest CSV PS Code
         let harvestPsCode = oneHarvestItem.ProjectCode;
         let foundID = _.find(arrayOfProjectTrsBoardObjects, (mondayTrsItem) => {
-          let psCodeColumnObject = mondayTrsItem.column_values[9].value;
+          let psCodeColumnObject = mondayTrsItem.column_values[1].value; //TODO: check that this is correct
 
           if (psCodeColumnObject === null || psCodeColumnObject === undefined) {
             trashPsCodes.push(mondayTrsItem.id)
           } else if(removeQuotedString(psCodeColumnObject) === harvestPsCode) {
+
             let myMondayHarvest = {
               oneHarvestItem,
               mondayTrsItem
             }
+
             return myMondayHarvest
+
           } else {
             trashPsCodes.push(mondayTrsItem.id)
           }
@@ -334,15 +357,54 @@ Object.assign(module.exports, {
 
       //Note: Matches Harvest User with Monday User ID
       function findHarvestUserMondayId(allMondayUsersContainer, harvestUser) {
+        //TODO: Place debugger somewhere else as I can't access the allMondayUserContainer - Matt K name does not match
+          //Note: Joe VS Joseph
+          //TODO: if else, if there are not two names in an emai. Swithc to checking based on first and last name.
+ 
         const matchedUser = _.find(allMondayUsersContainer, (aSingleMondayUser)=>{
-          let lowerCasedMondayUserName = aSingleMondayUser.name.toLowerCase();
-          let lowerCasedHarvestUserName = harvestUser.toLowerCase();
-          let validateMondayUser = lowerCasedMondayUserName !== null || undefined? lowerCasedMondayUserName : null;
+          let mondayUserEmailName = '';
+          let harvestUserFirstLastNames = harvestUser.toLowerCase();
+          let mondayEmailSplit = aSingleMondayUser.email.toLowerCase().split(/[.:@]/);
 
-          if((validateMondayUser === lowerCasedHarvestUserName)){
-            return aSingleMondayUser  
+          if ( (mondayEmailSplit[1] === "pendo")) {
+            // TODO: Note - matt and mike qualify here, but do not have there names changes.
+            let mondayLastName =  aSingleMondayUser.name.split(' ')[1].toLowerCase();
+            let harvestLastName = harvestUser.split(' ')[1].toLowerCase()
+
+            
+            if((mondayLastName === harvestLastName)){
+              return aSingleMondayUser
+            } 
+            
+          } else if (harvestUserFirstLastNames === "joshua kent"){
+            harvestUserFirstLastNames = "josh kent"
+            mondayUserEmailName = mondayEmailSplit.slice(0,2).join(' ')
+
+            if((mondayUserEmailName === harvestUserFirstLastNames)){
+              return aSingleMondayUser
+            }
+
+          } else if (harvestUserFirstLastNames === "austin devere-board"){
+            harvestUserFirstLastNames = "austin devereboard"
+            mondayUserEmailName = mondayEmailSplit.slice(0,2).join(' ')
+
+            if((mondayUserEmailName === harvestUserFirstLastNames)){
+              return aSingleMondayUser
+            }
+          } else {
+            mondayUserEmailName = mondayEmailSplit.slice(0,2).join(' ')
+            
+            if((mondayUserEmailName === harvestUserFirstLastNames)){
+              
+              
+              return aSingleMondayUser
+            }
+
           }
+
         })
+
+
         return matchedUser
       }
     }
@@ -350,15 +412,31 @@ Object.assign(module.exports, {
     {
       //Note: formatMondayTimeTrackingObj() function main worker, map() below loops through all Harvest Time Entries.
       function formatMondayTimeTrackingObj(aHarvestObj) {
+        let onlyHarvestFirstname
+        function checkForMiddleName(aHarvestFirstName) {
+          
+          let onlyHarvestFirstname
 
-        const harvestUser = `${aHarvestObj.FirstName} ${aHarvestObj.LastName}`;
-        const timeTrackingItemTitle = `${aHarvestObj.FirstName} ${aHarvestObj.LastName} - ${aHarvestObj.Project} - ${aHarvestObj.Task}`;
+          if(aHarvestFirstName.split(' ').length > 1){
+            onlyHarvestFirstname = aHarvestFirstName.split(' ')[0]
+            
+            return onlyHarvestFirstname
+
+          } else {
+
+            return aHarvestFirstName
+          }
+        }
+
+        const harvestUser = `${checkForMiddleName(aHarvestObj.FirstName)} ${aHarvestObj.LastName}`;
+        const timeTrackingItemTitle = `${aHarvestObj.FirstName} ${aHarvestObj.LastName} - ${aHarvestObj.ProjectCode} - ${aHarvestObj.Client} - ${aHarvestObj.Project} - ${aHarvestObj.Task}`;
         const timeTrackingItemDate = aHarvestObj.Date;
 
         const allMondayUsersContainer = res.locals.allMondayUsersContainer;
-        const matchingHarvestUserInMonday = findHarvestUserMondayId(allMondayUsersContainer, harvestUser);
-
+        
+        let matchingHarvestUserInMonday = findHarvestUserMondayId(allMondayUsersContainer, harvestUser);
         let trsBoardObjectMatched = matchTrsItem(aHarvestObj)
+        
         const harvestUserHours = aHarvestObj.Hours;
         const hoursApprovedBoolean = aHarvestObj.Approved;
         let hoursApprovalCheckerHours =  hoursApprovedBoolean === "No"? 0 : harvestUserHours;
@@ -369,7 +447,8 @@ Object.assign(module.exports, {
           let timeEntryWithMatchedMondayUser
           let justTrsId
 
-          if (trsBoardObjectMatched !== undefined) {
+          //note: changed from trs board match, as ADMIN make not have same value in harvest?
+          if ((trsBoardObjectMatched !== undefined && matchingHarvestUserInMonday !== undefined)) {
             justTrsId = trsBoardObjectMatched.id
 
             timeEntryWithMatchedMondayUser = {
@@ -387,78 +466,108 @@ Object.assign(module.exports, {
             };
 
             harvestTimeEntriesAndMondayUser.push(timeEntryWithMatchedMondayUser)
+
+          } else if ((trsBoardObjectMatched !== undefined && matchingHarvestUserInMonday === undefined)) {
+            
+            projectsMissingMondayUser.push(aHarvestObj)
+          }
+          else {
+            entriesNotOnTRSBoard.push(aHarvestObj)
           }
         }
-
       }
+
       //Note: Set in parseCSV() function.
-      arrayOfaHarvestObjects.map((aHarvestObj)=>{
+      arrayOfHarvestObjects.forEach((aHarvestObj)=>{
         formatMondayTimeTrackingObj(aHarvestObj)
       });
-      res.locals.harvestTimeEntriesAndMondayUser =  harvestTimeEntriesAndMondayUser;
-      console.log(`${harvestTimeEntriesAndMondayUser.length} Items ready to be sent to Monday.`);
+
+      //TODO: Add array to only pull out items that are from Joe, based on his Monday ID
+
+      // justJoesTimeEntries = harvestTimeEntriesAndMondayUser.filter((aTimeEntry)=> { 
+      //   if ((aTimeEntry.matchingHarvestUserInMonday !== undefined || null) && (aTimeEntry.matchingHarvestUserInMonday.id ===  25397160)) {
+      //     return aTimeEntry
+      //   }
+        
+      // })
+
+      // onlyArchivedProjects = harvestTimeEntriesAndMondayUser.filter(aTimeEntry=>{
+      //   let myFoundArchivedProject
+      //   if ((aTimeEntry.projectCode !== undefined || null)) {
+      //     myFoundArchivedProject = onlyArchivedPsCodesArray.archived.find((anArchivedPsCode)=> aTimeEntry.projectCode === anArchivedPsCode )
+      //     return myFoundArchivedProject
+      //   }
+      // })
+
+      let duplicatesRemoved = [...new Set(harvestTimeEntriesAndMondayUser)];
+      
+      res.locals.harvestTimeEntriesAndMondayUser = duplicatesRemoved
+      // harvestTimeEntriesAndMondayUser;      
+      console.log(`${duplicatesRemoved.length} cleaned items ready to be sent to Monday.`);
       next()
     }
   },
-  sumLastFiscalYear: async (res,req,next)=>{
-    // Note: Pulls out all time entries from FY2021/June 31st, 2021 into an array.
-    const timeEntriesFY2021 = [];
-    harvestTimeEntriesAndMondayUser.map((aHarvestTimeEntry)=>{
-      if(aHarvestTimeEntry.timeTrackingItemDate <= '2022-01-31'){        
-        timeEntriesFY2021.push(aHarvestTimeEntry)
-      }else{
-        fy2023Q1April.push(aHarvestTimeEntry)
-      }
-    })
+  // sumLastFiscalYear: async (res,req,next)=>{
+  //   // Note: Pulls out all time entries from FY2021/June 31st, 2021 into an array.
+  //   const timeEntriesFY2021 = [];
+  //   harvestTimeEntriesAndMondayUser.map((aHarvestTimeEntry)=>{
+  //     if(aHarvestTimeEntry.timeTrackingItemDate <= '2022-01-31'){        
+  //       timeEntriesFY2021.push(aHarvestTimeEntry)
+  //     }else{
+  //       fy2023Q1April.push(aHarvestTimeEntry)
+  //     }
+  //   })
 
-    timeEntriesFY2021.map(function (fy2021TimeEntry){
-      let projectHoursTotaled = projectsWithTotalHours.find(existingItem => existingItem.justTrsId == fy2021TimeEntry.justTrsId);
+  //   timeEntriesFY2021.map(function (fy2021TimeEntry){
+  //     let projectHoursTotaled = projectsWithTotalHours.find(existingItem => existingItem.justTrsId == fy2021TimeEntry.justTrsId);
 
-      function utilInsertPSCode(fy2021TimeEntry, itemObject) {
-        let getArrayOfTitle = fy2021TimeEntry.timeTrackingItemTitle.split('-')
-        getArrayOfTitle.splice(2,0, `${fy2021TimeEntry.projectCode}`);
-        itemObject.timeTrackingItemTitle = getArrayOfTitle.join(' - ')
+  //     function utilInsertPSCode(fy2021TimeEntry, itemObject) {
+  //       let getArrayOfTitle = fy2021TimeEntry.timeTrackingItemTitle.split('-')
+  //       getArrayOfTitle.splice(2,0, `${fy2021TimeEntry.projectCode}`);
+  //       itemObject.timeTrackingItemTitle = getArrayOfTitle.join(' - ')
 
-        return itemObject.timeTrackingItemTitle
-      }
+  //       return itemObject.timeTrackingItemTitle
+  //     }
 
-      function utilUpdateProjectObject(originalItemObject, newItemObject){
-        originalItemObject.justTrsId = newItemObject.justTrsId;
-        originalItemObject.timeTrackingItemTitle = utilInsertPSCode(newItemObject, originalItemObject)
-        originalItemObject.totalHarvestUserHours = newItemObject.harvestUserHours
+  //     function utilUpdateProjectObject(originalItemObject, newItemObject){
+  //       originalItemObject.justTrsId = newItemObject.justTrsId;
+  //       originalItemObject.timeTrackingItemTitle = utilInsertPSCode(newItemObject, originalItemObject)
+  //       originalItemObject.totalHarvestUserHours = newItemObject.harvestUserHours
 
-        return originalItemObject
-      }
+  //       return originalItemObject
+  //     }
 
-      if (projectHoursTotaled !== undefined) {
-        //Note: Replaces original project user hours, with most recent summed valued.
-        let currentTotalHoursForProject = parseFloat(projectHoursTotaled.totalHarvestUserHours);
-        let newHoursFromSimilarProject = parseFloat(fy2021TimeEntry.harvestUserHours);
-        let totalNewHoursToAdd = (currentTotalHoursForProject + newHoursFromSimilarProject).toString();
+  //     if (projectHoursTotaled !== undefined) {
+  //       //Note: Replaces original project user hours, with most recent summed valued.
+  //       let currentTotalHoursForProject = parseFloat(projectHoursTotaled.totalHarvestUserHours);
+  //       let newHoursFromSimilarProject = parseFloat(fy2021TimeEntry.harvestUserHours);
+  //       let totalNewHoursToAdd = (currentTotalHoursForProject + newHoursFromSimilarProject).toString();
 
-        projectHoursTotaled = utilUpdateProjectObject(projectHoursTotaled, fy2021TimeEntry)
-        projectHoursTotaled.totalHarvestUserHours = totalNewHoursToAdd;
+  //       projectHoursTotaled = utilUpdateProjectObject(projectHoursTotaled, fy2021TimeEntry)
+  //       projectHoursTotaled.totalHarvestUserHours = totalNewHoursToAdd;
 
-        console.log('Project hours compiled.');
-      } else {
-        let newObject = {};
+  //       console.log('Project hours compiled.');
+  //     } else {
+  //       let newObject = {};
 
-        newObject = utilUpdateProjectObject(newObject, fy2021TimeEntry);
-        projectsWithTotalHours.push(newObject)
+  //       newObject = utilUpdateProjectObject(newObject, fy2021TimeEntry);
+  //       projectsWithTotalHours.push(newObject)
 
-        console.log('New project added to array that did not exist previously.');
-      }
-    });
+  //       console.log('New project added to array that did not exist previously.');
+  //     }
+  //   });
 
-    projectsWithTotalHours // Note: Contains array of unqiue projects, with their totalUserHours compiled.
-  },
+  //   projectsWithTotalHours // Note: Contains array of unqiue projects, with their totalUserHours compiled.
+  // },
   postMondayItems: async (req, res, next)=> {    
-    let arrayOfSingularProjectTimeEntries = harvestTimeEntriesAndMondayUser; //Note: uncomment variable when required - harvestTimeEntriesAndMondayUser
-    let arrayOfSumProjectTotals = undefined; //Note: uncomment variable when required - projectsWithTotalHours
+    let arrayOfSingularProjectTimeEntries = res.locals.harvestTimeEntriesAndMondayUser; //Note: uncomment variable when required - harvestTimeEntriesAndMondayUser
+    // let arrayOfSumProjectTotals = undefined; //Note: uncomment variable when required - projectsWithTotalHours
+    
     let myFormattedTimeTrackingItems
 
     const mondayURL= "https://api.monday.com/v2";
-    const devMondayBoardID = 2635507777;
+    const devMondayBoardID = 2887226992;
+
     let query = `mutation ( 
       $boardId: Int!, 
       $myItemName: String!,
@@ -475,8 +584,8 @@ Object.assign(module.exports, {
 
     //TODO: combine arrays of time entries into one, then loop through and create on if/else
     if (arrayOfSingularProjectTimeEntries !== undefined) {
-
-      // TODO: Every time this is true, add onto array
+      
+      // TODO: Every time this is true, add onto array REMOVE ELSE STATEMENT DOES NOT BREAK.
       myFormattedTimeTrackingItems = arrayOfSingularProjectTimeEntries.map((aTimeEntryAndMondayUser)=> {
 
         if(aTimeEntryAndMondayUser.matchingHarvestUserInMonday){       
@@ -497,235 +606,313 @@ Object.assign(module.exports, {
         return aMondayTimeEntrySingularHours;
 
         }
-      })
 
-    } else {
-      myFormattedTimeTrackingItems = arrayOfSumProjectTotals.map((aProjectAndTotalHours)=> {
-        let mondayProjectHoursTotaled = JSON.stringify({
+      })
+    
+    } 
+    
+    // else {
+    //   myFormattedTimeTrackingItems = arrayOfSumProjectTotals.map((aProjectAndTotalHours)=> {
+    //     let mondayProjectHoursTotaled = JSON.stringify({
           
-          "boardId": devMondayBoardID,
-          "myItemName": aProjectAndTotalHours.timeTrackingItemTitle,
-          "column_values": JSON.stringify({
-            "numbers": aProjectAndTotalHours.totalHarvestUserHours,
-            "connect_boards5": {"changed_at":"2022-05-11T17:16:52.729Z","linkedPulseIds":[{"linkedPulseId": parseFloat(aProjectAndTotalHours.justTrsId)}]}
-          })
-        });
+    //       "boardId": devMondayBoardID,
+    //       "myItemName": aProjectAndTotalHours.timeTrackingItemTitle,
+    //       "column_values": JSON.stringify({
+    //         "numbers": aProjectAndTotalHours.totalHarvestUserHours,
+    //         "connect_boards5": {"changed_at":"2022-05-11T17:16:52.729Z","linkedPulseIds":[{"linkedPulseId": parseFloat(aProjectAndTotalHours.justTrsId)}]}
+    //       })
+    //     });
         
-        return mondayProjectHoursTotaled;
-
-      })
-    }
+    //     return mondayProjectHoursTotaled;
 
     const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
-    console.log(myFormattedTimeTrackingItems, `<--- myFormattedTimeTrackingItems Count: ${myFormattedTimeTrackingItems.length - 1} ---`);
-
+    console.log(`myFormattedTimeTrackingItems Count: ${myFormattedTimeTrackingItems.length - 1} <---`);
+    
     async function loadAPIRequestsWithDelayTimer() {
       //Note: Send POST request with 1 second delay to avoid server timeout. Loop must be wrapped in a async function.
-      for (var i = 0; i <= myFormattedTimeTrackingItems.length - 1; myFormattedTimeTrackingItems[i++]) {
+      
+      for (var i = 0; i <= myFormattedTimeTrackingItems.length - 1; i++) {
+        console.log(`Currently on item ${i} of  ${myFormattedTimeTrackingItems.length - 1}`)
+
         axios.post(mondayURL,
-        {
-          'query': query,
-          'variables': myFormattedTimeTrackingItems[i]
-        }, 
-        {
-          headers: {
-            'Content-Type': `application/json`,
-            'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
-          },
-        }
-        )
-        .then((response)=>{
-          let serverResponse = response.data.errors? response.errors[0] : "Status: Success, Item Created."
-          console.log(serverResponse);
-
-          return response
-        })
-        .catch((error)=> {
-          'There was an error in loadAPIRequestsWithDelayTimer(): ' + error
-        })
-        await timer(1000); // Note: Timeout set, execution halted, when timeout completes, restart.
-      }
-
-      //Note: Change output based on array being pushed to Monday.com
-      arrayOfSingularProjectTimeEntries !== undefined? 
-      console.log('=============== Creating Project Totals Complete! ================'):  
-      console.log('=============== Creating Single Time Entries Complete! ================')
-      return //Note: Break from sending requests.
-    }
-    loadAPIRequestsWithDelayTimer()
-
-  },
-  getReverseTableIdsToLink: async(req, res, next)=>{
-    //Note: Required in order to create Linked Items via their IDs.
-    console.log("===> Pulling Monday.com items id. <====");
-
-    {
-      const projectTimeEntriesBoads = 2635507777;
-
-      let query = `{
-        boards (ids: ${projectTimeEntriesBoads}) {
-          items {
-            id
-            name
-            column_values {
-              id
-              title
-              value
-            }
+          {
+            'query': query,
+            'variables': myFormattedTimeTrackingItems[i]
+          }, 
+          {
+            headers: {
+              'Content-Type': `application/json`,
+              'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
+            },
           }
-        }
-      }`;
-
-      await axios.post("https://api.monday.com/v2",
-      {
-        'query': query,
-      },
-      {
-        headers: {
-          'Content-Type': `application/json`,
-          'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
-        },
-      })
-      .then((response)=>{
-        timeEntryBoardItemColumnIds = response.data.data.boards[0].items;
-        next();
-      })
-      .catch((error)=> {
-        'There was an error in loadAPIRequestsWithDelayTimer(): ' + error
-      })
-
-    }
-  },
-  reverseLinkMondayItems: async (res, req, next) =>{
-
-    let myFormattedTimeTrackingItems  = timeEntryBoardItemColumnIds
-    let query = '';
-
-    // Note: Maps through ids from project trs board
-    timeEntryBoardItemColumnIds.map((timeEntryBoardItem)=>{
-      // A ProjectTrs Project, with pulseids - need to match on TRS ID
-      let projectWithNewPulseIdToLink = projectTrsItemsWithLinkedPulseIds.find((existingItem, index) =>{
-        let firsParseRound = JSON.parse(existingItem);
-        let secondParseRound = JSON.parse(firsParseRound.column_values)['link_to_time_reporting'].linkedPulseIds[index - 1].linkedPulseId;
-
-        secondParseRound !== parseInt(timeEntryBoardItem.id)
-
-      } );
-    //TODO: pull board item id and column id of board to be updated
-    // link_to_duplicate_of_time_tracking_for_harvest_import8
-    // link_to_duplicate_of_time_tracking_for_harvest_import2
-    // "value": "{\"linkedPulseIds\":[{\"linkedPulseId\":<item_id_to_be_connected>}]}"
-
-    // timeEntryBoardItemColumnIds[38] - item with Nick added to the duplicate
-
-    //id: "link_to_time_reporting"
-    // title: "Duplicate of Time Tracking for Harvest Import"
-    // value: "{\"changed_at\":\"2022-06-15T18:26:48.773Z\",\"linkedPulseIds\":[{\"linkedPulseId\":2793992229}]}"
-
-      if (projectWithNewPulseIdToLink !== undefined) {
-        // Note: Will add a LinkPulseId to an a project item's linked column.
-        //linkedPulseIds":[{"linkedPulseId":2495489846},{"linkedPulseId":2552643474}]}'}
-
-        // query = "mutation { change_column_value (board_id: 1156871139, item_id: 1156871143, column_id: \"status\", value: \"{\\\"label\\\":\\\"Stuck\\\"}\") {id}}";
-
-        // "value": "{\"linkedPulseIds\":[{\"linkedPulseId\":<item_id_to_be_connected>}]}"
-        // query = "mutation { change_column_value( item_id:11111, board_id:22222, column_values: \"{\"linkedPulseIds\": {\"linkedPulseId\" : `${TODO: adTheItemIdHereIteratively}`]}}\") {id}}";
-        // TODO: Update array only
-        let query = `mutation ( 
-          $boardId: Int!,
-          $itemId: Int!,
-          $column_values: JSON!
-        ){
-          change_multiple_column_values(
-          board_id: $boardId,
-          item_id: $itemId,
-          create_labels_if_missing: true,
-          column_values: $column_values
-        )
-        {id}
-        }`;
-
-        let addNewObject = {"linkedPulseId": parseFloat(projectWithNewPulseIdToLink.id)}
-        
-        //TODO: if linkpulseids already has an id, add on to it without overwriting the original sets of objects
-        let arrayWithAdditionalLinkedPulseId = JSON.stringify({
-          "column_values": JSON.stringify({
-            "link_to_time_reporting": {"changed_at":"2022-05-11T17:16:52.729Z", "linkedPulseIds":[{"linkedPulseId": parseFloat(projectWithNewPulseIdToLink.id)}]}
+          )
+          .then((response)=>{
+            
+            let serverResponse = response.data.errors? response.errors[0] : "Status: Success, Item Created."
+            console.log(serverResponse, response);
+            
+            next()
           })
-        });
+          .catch((error)=> {
 
+            if( error.response ){
+              console.log(error.response.data); // => the response payload
+              console.log('There was an error in loadAPIRequestsWithDelayTimer(): ' + error);
+              
+            } 
 
-      } else {
-        // Create
-        debugger
-        let query = `mutation ( 
-          $boardId: Int!,
-          $itemId: Int!,
-          $column_values: JSON!
-        ){
-          change_multiple_column_values(
-          board_id: $boardId,
-          item_id: $itemId,
-          create_labels_if_missing: true,
-          column_values: $column_values
-        )
-        {id}
-        }`;
-        
-        debugger
-        //TODO: if linkpulseids already has an id, add on to it without overwriting the original sets of objects
-        let firstLinkedPulseId = JSON.stringify({
-          
-          "boardId": 2495489300,
-          "item_id": parseInt(projectWithNewPulseIdToLink.item_id),
-          "column_values": JSON.stringify({
-            "link_to_time_reporting": {"changed_at":"2022-05-11T17:16:52.729Z", "linkedPulseIds":[{"linkedPulseId": parseFloat(timeEntryBoardItem.id)}]}
           })
-        });
-
-        projectTrsItemsWithLinkedPulseIds.push(firstLinkedPulseId)
-
-      }
-    })
-
-    const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
-    console.log(myFormattedTimeTrackingItems, `<--- myFormattedTimeTrackingItems Count: ${myFormattedTimeTrackingItems.length - 1} ---`);
-
-    async function loadAPIRequestsWithDelayTimer() {
-      //Note: Send POST request with 1 second delay to avoid server timeout. Loop must be wrapped in a async function.
-      for (var i = 0; i <= myFormattedTimeTrackingItems.length - 1; myFormattedTimeTrackingItems[i++]) {
-        axios.post(mondayURL,
-        {
-          'query': query,
-          'variables': myFormattedTimeTrackingItems[i]
-        }, 
-        {
-          headers: {
-            'Content-Type': `application/json`,
-            'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
-          },
-        }
-        )
-        .then((response)=>{
-          let serverResponse = response.data.errors? response.errors[0] : "Status: Success, Item Created."
-          console.log(serverResponse);
-
-          return response
-        })
-        .catch((error)=> {
-          'There was an error in loadAPIRequestsWithDelayTimer(): ' + error
-        })
-        await timer(1000); // Note: Timeout set, execution halted, when timeout completes, restart.
+  
+          await timer(1000); // Note: Timeout set, execution halted, when timeout completes, restart.
       }
 
-      //Note: Change output based on array being pushed to Monday.com
-      arrayOfSingularProjectTimeEntries !== undefined? 
-      console.log('=============== Creating Project Totals Complete! ================'):  
-      console.log('=============== Creating Single Time Entries Complete! ================')
-      return //Note: Break from sending requests.
+      return //break just in case
     }
     loadAPIRequestsWithDelayTimer()
+    
+  },
+  // getReverseTableIdsToLink: async(req, res, next)=>{
+  //   //Note: Required in order to create Linked Items via their IDs.
+  //   console.log("===> Pulling Monday.com items id. <====");
 
-  }
+  //   {
+  //     const projectTimeEntriesBoads = 2635507777;
+
+  //     let query = `{
+  //       boards (ids: ${projectTimeEntriesBoads}) {
+  //         items {
+  //           id
+  //           name
+  //           column_values {
+  //             id
+  //             title
+  //             value
+  //           }
+  //         }
+  //       }
+  //     }`;
+
+  //     await axios.post("https://api.monday.com/v2",
+  //     {
+  //       'query': query,
+  //     },
+  //     {
+  //       headers: {
+  //         'Content-Type': `application/json`,
+  //         'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
+  //       },
+  //     })
+  //     .then((response)=>{
+  //       timeEntryBoardItemColumnIds = response.data.data.boards[0].items;
+  //       next();
+  //     })
+  //     .catch((error)=> {
+  //       'There was an error in loadAPIRequestsWithDelayTimer(): ' + error
+  //     })
+
+  //   }
+  // },
+  // getReverTableProjects: async(req, res, next)=>{
+  //   //Note: Required in order to create Linked Items via their IDs.
+  //   console.log("===> Pulling Monday.com items id. <====");
+
+  //   {
+  //     const projectTRSBoard = 2867792547;
+
+  //     let query = `{
+  //       boards (ids: ${projectTRSBoard}) {
+  //         items {
+  //           id
+  //           name
+  //           column_values {
+  //             id
+  //             title
+  //             value
+  //           }
+  //         }
+  //       }
+  //     }`;
+
+  //     await axios.post("https://api.monday.com/v2",
+  //     {
+  //       'query': query,
+  //     },
+  //     {
+  //       headers: {
+  //         'Content-Type': `application/json`,
+  //         'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
+  //       },
+  //     })
+  //     .then((response)=>{
+  //       mondayBoardToItemsToReverseLinkTo = response.data.data.boards[0].items;
+  //       next();
+  //     })
+  //     .catch((error)=> {
+  //       'There was an error in loadAPIRequestsWithDelayTimer(): ' + error
+  //     })
+
+  //   }
+  // },
+  // reverseLinkMondayItems: async (res, req, next) =>{
+
+  //   let myFormattedTimeTrackingItems  = timeEntryBoardItemColumnIds
+  //   let test1 = mondayBoardToItemsToReverseLinkTo
+  //   let reverseItemsToLinkTo = [];
+  //   let query = '';
+  //   let projectWithNewPulseIdToLink = '';
+    
+  //   // Note: Maps through ids from project trs board
+
+  //   // TODO: IF there is a match on pscode of project, then add on to pulse id array
+  //   //TODO: Need to have an array of ProjectTRS project codes, 
+  //   // let firsParseRound = JSON.parse(existingItem);
+  //   // let secondParseRound = JSON.parse(firsParseRound.column_values)['link_to_time_reporting'].linkedPulseIds[index - 1].linkedPulseId;
+  //   // secondParseRound !== parseInt(timeEntryBoardItem.id)
+  //   timeEntryBoardItemColumnIds.map((timeEntryBoardItem, index)=>{
+  //     let myCounter = timeEntryBoardItem[index]
+  //     let myFinalItem
+  //     // timeEntryBoardItem = TimeTracking Item that has it's id, and column id
+  //     //TODO: Every time you map, check if an item has the same ProjectTRS code, as a ProjectTRS item. 
+  //     projectWithNewPulseIdToLink = reverseItemsToLinkTo.find((aTrsProject, index) =>{
+        
+  //       let linkedPulseIdColumn = timeEntryBoardItem.column_values[4].value
+  //       let timeEntryProjectTrsLinkedMondayId = JSON.parse(linkedPulseIdColumn).linkedPulseIds[0].linkedPulseId
+        
+  //       let aTrsProjectIdNumber = parseInt(aTrsProject.id);
+
+  //       if(aTrsProjectIdNumber == timeEntryProjectTrsLinkedMondayId){
+  //         myFinalItem = timeEntryProjectTrsLinkedMondayId
+  //       } else {
+
+  //         myFinalItem = mondayBoardToItemsToReverseLinkTo[mondayBoardToItemsToReverseLinkTo.length - 1]
+  //         return myFinalItem
+  //       }
+
+  //     });
+
+      
+  //   //TODO: pull board item id and column id of board to be updated
+  //   // link_to_duplicate_of_time_tracking_for_harvest_import8
+  //   // link_to_duplicate_of_time_tracking_for_harvest_import2
+  //   // "value": "{\"linkedPulseIds\":[{\"linkedPulseId\":<item_id_to_be_connected>}]}"
+
+  //   // timeEntryBoardItemColumnIds[38] - item with Nick added to the duplicate
+
+  //   //id: "link_to_time_reporting"
+  //   // title: "Duplicate of Time Tracking for Harvest Import"
+  //   // value: "{\"changed_at\":\"2022-06-15T18:26:48.773Z\",\"linkedPulseIds\":[{\"linkedPulseId\":2793992229}]}"
+
+  //     if (projectWithNewPulseIdToLink !== undefined) {
+
+        
+  //       // Note: Will add a LinkPulseId to an a project item's linked column.
+  //       //linkedPulseIds":[{"linkedPulseId":2495489846},{"linkedPulseId":2552643474}]}'}
+
+  //       // query = "mutation { change_column_value (board_id: 1156871139, item_id: 1156871143, column_id: \"status\", value: \"{\\\"label\\\":\\\"Stuck\\\"}\") {id}}";
+
+  //       // "value": "{\"linkedPulseIds\":[{\"linkedPulseId\":<item_id_to_be_connected>}]}"
+  //       // query = "mutation { change_column_value( item_id:11111, board_id:22222, column_values: \"{\"linkedPulseIds\": {\"linkedPulseId\" : `${TODO: adTheItemIdHereIteratively}`]}}\") {id}}";
+  //       // TODO: Update array only
+
+  //       let query = `mutation ( 
+  //         $boardId: Int!,
+  //         $itemId: Int!,
+  //         $column_values: JSON!
+  //       ){
+  //         change_multiple_column_values(
+  //         board_id: $boardId,
+  //         item_id: $itemId,
+  //         create_labels_if_missing: true,
+  //         column_values: $column_values
+  //       )
+  //       {id}
+  //       }`;
+
+  //       let addNewObject = {"linkedPulseId": parseFloat(projectWithNewPulseIdToLink.id)}
+        
+  //       //TODO: if linkpulseids already has an id, add on to it without overwriting the original sets of objects
+  //       let arrayWithAdditionalLinkedPulseId = JSON.stringify({
+  //         "column_values": JSON.stringify({
+  //           "link_to_time_reporting": {"changed_at":"2022-05-11T17:16:52.729Z", "linkedPulseIds":[{"linkedPulseId": parseFloat(projectWithNewPulseIdToLink.id)}]}
+  //         })
+  //       });
+
+
+  //     } else {
+  //       // Create
+        
+        
+  //       reverseItemsToLinkTo.push(mondayBoardToItemsToReverseLinkTo[mondayBoardToItemsToReverseLinkTo.length - 1 ])
+  //       // let query = `mutation ( 
+  //       //   $boardId: Int!,
+  //       //   $itemId: Int!,
+  //       //   $column_values: JSON!
+  //       // ){
+  //       //   change_multiple_column_values(
+  //       //   board_id: $boardId,
+  //       //   item_id: $itemId,
+  //       //   create_labels_if_missing: true,
+  //       //   column_values: $column_values
+  //       // )
+  //       // {id}
+  //       // }`;
+        
+  //       // 
+  //       // //TODO: if linkpulseids already has an id, add on to it without overwriting the original sets of objects
+  //       // let firstLinkedPulseId = JSON.stringify({
+          
+  //       //   "boardId": 2495489300,
+  //       //   "item_id": parseInt(projectWithNewPulseIdToLink.item_id),
+  //       //   "column_values": JSON.stringify({
+  //       //     "link_to_time_reporting": {"changed_at":"2022-05-11T17:16:52.729Z", "linkedPulseIds":[{"linkedPulseId": parseFloat(timeEntryBoardItem.id)}]}
+  //       //   })
+  //       // });
+
+  //       // projectTrsItemsWithLinkedPulseIds.push(firstLinkedPulseId)
+
+  //     }
+  //   })
+
+  //   const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
+  //   console.log(myFormattedTimeTrackingItems, `<--- myFormattedTimeTrackingItems Count: ${myFormattedTimeTrackingItems.length - 1} ---`);
+
+  //   async function loadAPIRequestsWithDelayTimer() {
+  //     //Note: Send POST request with 1 second delay to avoid server timeout. Loop must be wrapped in a async function.
+  //     for (var i = 0; i <= myFormattedTimeTrackingItems.length - 1; myFormattedTimeTrackingItems[i++]) {
+  //       axios.post(mondayURL,
+  //       {
+  //         'query': query,
+  //         'variables': myFormattedTimeTrackingItems[i]
+  //       }, 
+  //       {
+  //         headers: {
+  //           'Content-Type': `application/json`,
+  //           'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
+  //         },
+  //       }
+  //       )
+  //       .then((response)=>{
+  //         let serverResponse = response.data.errors? response.errors[0] : "Status: Success, Item Created."
+  //         console.log(serverResponse);
+
+  //         return response
+  //       })
+  //       .catch((error)=> {
+  //         'There was an error in loadAPIRequestsWithDelayTimer(): ' + error
+  //       })
+  //       await timer(1000); // Note: Timeout set, execution halted, when timeout completes, restart.
+  //     }
+  //     console.log('=============== Creating Single Time Entries Complete! ================')
+  //     return
+  //     //Note: Change output based on array being pushed to Monday.com
+  //     // arrayOfSingularProjectTimeEntries !== undefined? 
+  //     // console.log('=============== Creating Project Totals Complete! ================'):  
+  //     // console.log('=============== Creating Single Time Entries Complete! ================')
+  //     //Note: Break from sending requests.
+  //   }
+  //   loadAPIRequestsWithDelayTimer()
+
+  // }
+
 
 })

@@ -2,7 +2,7 @@ const axios = require('axios')
 const _ = require('lodash');
 
 /** Global Variables */
-let mondayBoardID = 2917043593;
+let mondayBoardID = process.env.MONDAY_DEV_BOARD_ID;
 let arrayOfProjectTrsBoardObjects;
 let timeEntryConditionNotSatisfied = [];
 let harvestTimeEntriesAndMondayUser = [];

@@ -1,29 +1,39 @@
 const axios = require('axios')
 const _ = require('lodash');
+// TODO: Below variables not used. May Change.
 const fs = require('fs');
 const { JobList } = require('twilio/lib/rest/bulkexports/v1/export/job');
 const { json } = require('express/lib/response');
 const { clear } = require('console');
-let onlyArchivedPsCodesArray = require('../archivedPsCodes.json');
 
+// Note: These variables can be modified.
+const q2DuplicateBoard = 2887226992
+const projectTrsBoard = 2495489300
+
+//Note: Key Monday Board Variables. Do Not Change.
+const boardAMondayID = projectTrsBoard; // Board to be connect on, via item ids. (project trs board)
+const boardBMondayID = q2DuplicateBoard; // Board where items will be created. (time tracking board)
+
+let onlyArchivedPsCodesArray = require('../archivedPsCodes.json'); // Note: IDs used for filtering.
 let arrayOfProjectTrsBoardObjects; // Used in getProjectTRSBoardProjectData();
-let trashPsCodes = [];
+let timeEntryConditionNotSatisfied = [];
 let harvestTimeEntriesAndMondayUser = []; // Used in formatMondayTimeTrackingObj();
+let projectsMissingMondayUser = [];
+let validatedPSTimeEntries = [];
+let entriesNotOnTRSBoard = [];
+let mondayBoardItemIds = [];
+
 //TODO: Revisit below variables and consider removing.
 let arrayOfProjectTrsPSCodes = [];
 let projectsWithTotalHours = [];
-let mondayBoardItemIds = [];
 let projectTrsItemsWithLinkedPulseIds = [];
 let timeEntryBoardItemColumnIds = [];
 let mondayBoardToItemsToReverseLinkTo = [];
 let fy2023Q1April = [];
-let validatedPSTimeEntries = [];
 let testThis = [];
-let entriesNotOnTRSBoard = [];
 let justJoesTimeEntries = [];
 let onlyArchivedProjects = [];
-let projectsMissingMondayUser = [];
-
+let mikeAndMattProjects = [];
 
 // Quirks with using module.exports, when modules circularly depend on each other.
 // It is recommended against replacing the object.
@@ -39,16 +49,12 @@ let projectsMissingMondayUser = [];
 Object.assign(module.exports, {
   viewMondayBoardValues: async (req, res, next ) =>{
     // Note: This function serves as a READ operation. Not required for application to run.
-    console.log("Querying Monday Board Values.");
-    {
-      const projectTrsBoard = 2495489300;
-      const mainTimeTrackBoardProd = 2495489055;
-      const q2DuplicateBoard = 2887226992;
-      const duplicateOfTimeTrackingBoard = 2635507777;
+    console.log("READ Monday.com board Values.");
 
-      const viewBoardColumns = `query { boards (ids: ${q2DuplicateBoard}) { owner { id }  columns {   title   type }}}`;
+    {
+      const viewBoardColumns = `query { boards (ids: ${boardAMondayID}) { owner { id }  columns {   title   type }}}`;
       let query = `{
-        boards (ids: ${q2DuplicateBoard}) {
+        boards (ids: ${boardAMondayID}) {
           items {
             id
             name
@@ -172,14 +178,12 @@ Object.assign(module.exports, {
     {
       const fs = require('fs');
       const { parse } = require('csv-parse');
-      const { finished } = require('stream/promises'); // Note: The `stream/promises` module only works on Node.js => version 16^
+      // Note: The `stream/promises` module only works on Node.js => version 16^
+      const { finished } = require('stream/promises'); 
       const onlyCurrentHarvestProjects = './csvFiles/2022-07-01_harvest_time_export.csv'
-      // './csvFiles/2022-06-29_harvest_time_export.csv';
-      // './csvFiles/2022-06-08_harvest_codes_for_monday.csv'; // older file, replacing with newer CSV above.
-      const records = await [];
       const stream = fs.createReadStream(onlyCurrentHarvestProjects);
       const parser = stream.pipe(parse({ delimiter: ',', columns: true,}));
-      let validatedHarvstTimeEntry
+      const records = await [];
 
       parser.on('readable', () => {
         let record;
@@ -187,55 +191,61 @@ Object.assign(module.exports, {
           records.push(record);
         };
       });
+
       await finished(parser);
+
       {
         // Create a copy of Records
         const allMyRecords = records;
         const arrayOfHarvestObjects = await allMyRecords.map((aSingleRecord)=>{
-          //TODO: Upadte Excel Sheet to contain all projects, from today
-          //TODO: Upadte DATE - May 1 TO Present.
-          if(aSingleRecord.Date >= '2022-05-01' && aSingleRecord.Date <= '2022-07-01'){
+
+          if(aSingleRecord.Date >= '2022-02-01' && aSingleRecord.Date <= '2022-04-30'){
 
             const singleaHarvestObject = {
-              'Date': aSingleRecord.Date,
-              'Client': aSingleRecord.Client,
-              'Project': aSingleRecord.Project,
-              'ProjectCode': aSingleRecord['Project Code'],
-              'Task': aSingleRecord.Task,
-              'Notes': aSingleRecord.Notes,
-              'Hours': aSingleRecord.Hours,
-              'HoursRounded': aSingleRecord['Hours Rounded'],
-              'Billable': aSingleRecord['Billable?'],
-              'Invoiced': aSingleRecord['Invoiced?'],
-              'Approved': aSingleRecord['Approved?'],
-              'FirstName': aSingleRecord['First Name'],
-              'LastName': aSingleRecord['Last Name'],
-              'Roles': aSingleRecord.Roles,
-              'Employee': aSingleRecord['Employee?'],
-              'BillableRate': aSingleRecord['Billable Rate'],
-              'BillableAmount': aSingleRecord['Billable Amount'],
-              'CostRate': aSingleRecord['Cost Rate'],
-              'CostAmount': aSingleRecord['Cost Amount'],
-              'Currency': aSingleRecord.Currency,
-              'ExternalReferenceURL': aSingleRecord['External Reference URL'],
+              Date: aSingleRecord.Date,
+              Client: aSingleRecord.Client,
+              Project: aSingleRecord.Project,
+              ProjectCode: aSingleRecord['Project Code'],
+              Task: aSingleRecord.Task,
+              Notes: aSingleRecord.Notes,
+              Hours: aSingleRecord.Hours,
+              HoursRounded: aSingleRecord['Hours Rounded'],
+              Billable: aSingleRecord['Billable?'],
+              Invoiced: aSingleRecord['Invoiced?'],
+              Approved: aSingleRecord['Approved?'],
+              FirstNam: aSingleRecord['First Name'],
+              LastName: aSingleRecord['Last Name'],
+              Roles: aSingleRecord.Roles,
+              Employee: aSingleRecord['Employee?'],
+              BillableRate: aSingleRecord['Billable Rate'],
+              BillableAmount: aSingleRecord['Billable Amount'],
+              CostRate: aSingleRecord['Cost Rate'],
+              CostAmount: aSingleRecord['Cost Amount'],
+              Currency: aSingleRecord.Currency,
+              ExternalReferenceURL: aSingleRecord['External Reference URL'],
             }
+
             validatedPSTimeEntries.push(singleaHarvestObject)
+
           } else {
-            trashPsCodes.push(aSingleRecord)
+
+            timeEntryConditionNotSatisfied.push(aSingleRecord)
+
           }
 
         });
 
         res.locals.arrayOfHarvestObjects = validatedPSTimeEntries;
 
-        console.log(`Collected ${arrayOfHarvestObjects.length} line items from CSV file.`);
+        console.log(`Completed parsing of ${arrayOfHarvestObjects.length} line items from CSV file.`);
       }
       next();
     }
   },
   getUserFromMonday: async (req, res, next) => {
     //Note: Monday.com User IDs required to create related User in Monday.com.
-    console.log('Getting Current Users from Monday.com');
+    console.log('Getting all Monday.com User emails and ids.');
+
     {
       let allMondayUsersContainer = [];
       let query = "query { users { email id name} }"
@@ -249,25 +259,28 @@ Object.assign(module.exports, {
           },
       }
       ).then((response)=>{
+
         allMondayUsersContainer = response.data.data.users
+
         return response
+
       }).catch((error)=>{
         console.log('Here is my error:' + error, 'error');
       })
   
       res.locals.allMondayUsersContainer = allMondayUsersContainer
-      console.log(`${allMondayUsersContainer.length} Monday.com Users collected.`)
+      console.log(`${allMondayUsersContainer.length - 1} Monday.com Users collected.`)
+
       next()
     }
   },
   getProjectTRSBoardProjectData: async (req, res, next)=>{
     //Note: Required in order to create Linked Items via their IDs.
-    console.log("Pulling ProjectTRS board projects, to match with Harvest PS Codes.");
+    console.log("Pulling Board A project items, to match against CSV IDs of: Harvest PS Codes.");
+
     {
-
       const projectTrsBoard = 2495489300;
-
-      const projectTRSBoardObjectsCollection = []
+      
       let query = `{
         boards (ids: ${projectTrsBoard}) {
           items {
@@ -281,6 +294,15 @@ Object.assign(module.exports, {
           }
         }
       }`;
+
+      //Note: Utility functions --->
+      const projectTRSBoardObjectsCollection = []
+      function collectBoardAColumnNameAndIDItems(boardAItems) {
+          const projectTrsItemsNameIdColumnObjects = boardAItems
+          projectTrsItemsNameIdColumnObjects.map((boardAItem)=>{
+            projectTRSBoardObjectsCollection.push(boardAItem)
+          })
+      }
   
       await axios.post("https://api.monday.com/v2",  {
         'query': query,
@@ -292,21 +314,17 @@ Object.assign(module.exports, {
         },
       })
       .then((response)=>{
-        //TODO: Extract below into compiled hours functionality.
-        // const projectTrsItemsNameIdColumnObjects = response.data.data.boards[0].items
-        // projectTrsItemsNameIdColumnObjects.map((anItem)=>{
-        //   projectTRSBoardObjectsCollection.push(anItem)
-        // })
-        //projectTRSBoardObjectsCollection
-
-        arrayOfProjectTrsBoardObjects = response.data.data.boards[0].items
+        let itemsFromResponse = response.data.data.boards[0].items
+        
+        collectBoardAColumnNameAndIDItems(itemsFromResponse)
+        arrayOfProjectTrsBoardObjects = itemsFromResponse
 
       })
       .catch((error)=>{
         console.log('Here is my error:' + error, 'error');
       })
 
-      console.log(arrayOfProjectTrsBoardObjects.length + `: ProjectTRS Items Collected.`)
+      console.log(`${arrayOfProjectTrsBoardObjects.length - 1}` + ` board A Items Collected from: ProjectTrsBoard`)
       next()
     }
   },
@@ -338,7 +356,7 @@ Object.assign(module.exports, {
           let psCodeColumnObject = mondayTrsItem.column_values[1].value; //TODO: check that this is correct
 
           if (psCodeColumnObject === null || psCodeColumnObject === undefined) {
-            trashPsCodes.push(mondayTrsItem.id)
+            timeEntryConditionNotSatisfied.push(mondayTrsItem.id)
           } else if(removeQuotedString(psCodeColumnObject) === harvestPsCode) {
 
             let myMondayHarvest = {
@@ -349,7 +367,7 @@ Object.assign(module.exports, {
             return myMondayHarvest
 
           } else {
-            trashPsCodes.push(mondayTrsItem.id)
+            timeEntryConditionNotSatisfied.push(mondayTrsItem.id)
           }
         })
         return foundID
@@ -357,10 +375,6 @@ Object.assign(module.exports, {
 
       //Note: Matches Harvest User with Monday User ID
       function findHarvestUserMondayId(allMondayUsersContainer, harvestUser) {
-        //TODO: Place debugger somewhere else as I can't access the allMondayUserContainer - Matt K name does not match
-          //Note: Joe VS Joseph
-          //TODO: if else, if there are not two names in an emai. Swithc to checking based on first and last name.
- 
         const matchedUser = _.find(allMondayUsersContainer, (aSingleMondayUser)=>{
           let mondayUserEmailName = '';
           let harvestUserFirstLastNames = harvestUser.toLowerCase();
@@ -447,7 +461,6 @@ Object.assign(module.exports, {
           let timeEntryWithMatchedMondayUser
           let justTrsId
 
-          //note: changed from trs board match, as ADMIN make not have same value in harvest?
           if ((trsBoardObjectMatched !== undefined && matchingHarvestUserInMonday !== undefined)) {
             justTrsId = trsBoardObjectMatched.id
 
@@ -482,26 +495,27 @@ Object.assign(module.exports, {
         formatMondayTimeTrackingObj(aHarvestObj)
       });
 
-      //TODO: Add array to only pull out items that are from Joe, based on his Monday ID
+      let archivedMatt = harvestTimeEntriesAndMondayUser.filter((aTimeEntry)=> aTimeEntry.harvestUser === "Matthew Kerbawy" );
+      let archivedMike = harvestTimeEntriesAndMondayUser.filter((aTimeEntry)=> aTimeEntry.harvestUser === "Mike Fotinatos" );
+      let allMattAndMikeArchivedProjects = [...archivedMatt, ...archivedMike]
 
-      // justJoesTimeEntries = harvestTimeEntriesAndMondayUser.filter((aTimeEntry)=> { 
-      //   if ((aTimeEntry.matchingHarvestUserInMonday !== undefined || null) && (aTimeEntry.matchingHarvestUserInMonday.id ===  25397160)) {
-      //     return aTimeEntry
-      //   }
-        
-      // })
-
-      // onlyArchivedProjects = harvestTimeEntriesAndMondayUser.filter(aTimeEntry=>{
+      // onlyArchivedProjects = allMattAndMikeArchivedProjects.filter(aTimeEntry=>{
       //   let myFoundArchivedProject
+
       //   if ((aTimeEntry.projectCode !== undefined || null)) {
-      //     myFoundArchivedProject = onlyArchivedPsCodesArray.archived.find((anArchivedPsCode)=> aTimeEntry.projectCode === anArchivedPsCode )
+
+      //     myFoundArchivedProject = onlyArchivedPsCodesArray.archived.find((anArchivedPsCode)=> aTimeEntry.projectCode === anArchivedPsCode)
       //     return myFoundArchivedProject
+
       //   }
+
       // })
 
-      let duplicatesRemoved = [...new Set(harvestTimeEntriesAndMondayUser)];
+      let duplicatesRemoved = [...new Set(allMattAndMikeArchivedProjects)];
       
       res.locals.harvestTimeEntriesAndMondayUser = duplicatesRemoved
+
+      
       // harvestTimeEntriesAndMondayUser;      
       console.log(`${duplicatesRemoved.length} cleaned items ready to be sent to Monday.`);
       next()
@@ -566,7 +580,7 @@ Object.assign(module.exports, {
     let myFormattedTimeTrackingItems
 
     const mondayURL= "https://api.monday.com/v2";
-    const devMondayBoardID = 2887226992;
+    const devMondayBoardID = 2635507777;
 
     let query = `mutation ( 
       $boardId: Int!, 
@@ -630,10 +644,8 @@ Object.assign(module.exports, {
     
     async function loadAPIRequestsWithDelayTimer() {
       //Note: Send POST request with 1 second delay to avoid server timeout. Loop must be wrapped in a async function.
-      
       for (var i = 0; i <= myFormattedTimeTrackingItems.length - 1; i++) {
         console.log(`Currently on item ${i} of  ${myFormattedTimeTrackingItems.length - 1}`)
-
         axios.post(mondayURL,
           {
             'query': query,
@@ -647,10 +659,8 @@ Object.assign(module.exports, {
           }
           )
           .then((response)=>{
-            
-            let serverResponse = response.data.errors? response.errors[0] : "Status: Success, Item Created."
-            console.log(serverResponse, response);
-            
+            let returnedMondayItem = response.data.data.create_item
+            console.log(returnedMondayItem, "Status: Success, Item Created."); //TODO: removed response.
             next()
           })
           .catch((error)=> {
@@ -658,14 +668,11 @@ Object.assign(module.exports, {
             if( error.response ){
               console.log(error.response.data); // => the response payload
               console.log('There was an error in loadAPIRequestsWithDelayTimer(): ' + error);
-              
-            } 
+            }
 
           })
-  
           await timer(1000); // Note: Timeout set, execution halted, when timeout completes, restart.
       }
-
       return //break just in case
     }
     loadAPIRequestsWithDelayTimer()

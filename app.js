@@ -70,7 +70,7 @@ console.log('Honday Bot is Starting Work')
 // app.use(viewMondayBoardValues);
 //  TODO: find pulse ids, to pass into TRS board.
 
-//TODO: Delete items from a board.
+//Note: Delete items from a board.
 // app.use(getMondayBoardItemIds);
 // app.use(deleteBoardItems);
 
@@ -79,7 +79,7 @@ app.use(getUserFromMonday);
 app.use(parseCSV);
 app.use(getProjectTRSBoardProjectData);
 app.use(compareHarvestCSVAndProjectTRSBoard);
-app.use(postMondayItems);
+// app.use(postMondayItems);
 
 // parseCSV,
 // getProjectTRSBoardProjectData, 

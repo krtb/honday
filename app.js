@@ -21,13 +21,13 @@ const {
   getReverTableProjects,
   getReverseTableIdsToLink,
   reverseLinkMondayItems,
-  getMondayBoardItemIds,
+  boardOwnerColumnData,
   deleteBoardItems,
   parseCSV,
   getProjectTRSBoardProjectData, 
   compareHarvestCSVAndProjectTRSBoard,
   getUserFromMonday,
-  readItemsAndColumns,
+  itemsColumnValuesData,
   sumLastFiscalYear, 
   postMondayItems, 
   getHarvestCSVData,
@@ -66,12 +66,14 @@ const {
 
 /*================ Time Entry Section ================*/
 console.log('Honday Bot is Starting Work')
-//Note: To find which column value types to create
-app.use(readItemsAndColumns);
+
+/** READ Actions */
+app.use(itemsColumnValuesData);
+app.use(boardOwnerColumnData);
+
 //  TODO: find pulse ids, to pass into TRS board.
 
 //Note: Delete items from a board.
-// app.use(getMondayBoardItemIds);
 // app.use(deleteBoardItems);
 
 //TODO: CREATE NEW ITEMS --- main functions to migrate data.
@@ -90,7 +92,7 @@ app.use(readItemsAndColumns);
 // app.use(sumLastFiscalYear);
 
 //Note: Reverse Link pulseIds
-// app.use(getMondayBoardItemIds);
+// app.use(boardOwnerColumnData);
 // app.use(getReverseTableIdsToLink);
 // app.use(getReverTableProjects);
 // app.use(reverseLinkMondayItems);

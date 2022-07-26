@@ -22,13 +22,11 @@ const axiosConfig = {
 
 Object.assign(module.exports, {
   /**
-   * READ columns from provided Monday.com board.
+   * READ Items and Column Values from Monday.com board.
    * @async
    * @function next From Express Router, allows Server to move on to next route.
-   * @param {number} mondayBoardID ID from Monday.com board being READ from.
-   * @param {number} MONDAY_APIV2_TOKEN_KURT Monday.com API Key with READ/WRITE access.
    */
-  readItemsAndColumns: async (req, res, next) =>{
+  itemsColumnValuesData: async (req, res, next) =>{
     {
       let query = `{
         boards (ids: ${mondayBoardID}) {
@@ -39,60 +37,68 @@ Object.assign(module.exports, {
               id
               title
               value
+              text
             }
           }
         }
       }`;
       await axios.post(axiosURL,{query}, axiosConfig)
       .then((response)=>{
-        if (response.data.data) {
+        if (response.data.data.boards) {
           console.log(response.data.data.boards[0])
-          console.log(`READ items and item columns from boardID: ${mondayBoardID}`);
+          console.log(`READ items and item columns.`);
         } else {
           console.error('malformed_query')
           console.error(response.data.errors)
         }
       })
       .catch((err)=>{
-        console.error('Server Response...')
+        console.error('server_response')
         console.error(err, `status_code: ${res.statusCode}`);
       });
       next();
     }
   },
-  getMondayBoardItemIds: async (req, res, next)=>{
-    //Note: Required in order to create Linked Items via their IDs.
-    console.log("===> Pulling Monday.com items id. <====");
-
+  /**
+   * READ Board, Owner and Columns from Monday.com board.
+   * @async
+   * @function next From Express Router, allows Server to move on to next route.
+   */
+  boardOwnerColumnData: async (req, res, next)=>{
     {
-      const mondayBoardId = 2635507777;
-
       let query = `{
-        boards (ids: ${mondayBoardId}) {
-          items {
+        boards (ids: ${mondayBoardID}) {
+          name
+          state
+          board_folder_id
+          owners {
             id
+          }
+          columns {
+            title
+            type
           }
         }
       }`;
-
-      await axios.post("https://api.monday.com/v2",
-      {
-        'query': query,
-      },
-      {
-        headers: {
-          'Content-Type': `application/json`,
-          'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
-        },
-      })
+      await axios.post(axiosURL,{query}, axiosConfig)
       .then((response)=>{
-        mondayBoardItemIds = response.data.data.boards[0].items;
-        next();
-      })
-      .catch((error)=> {
-        'There was an error in loadAPIRequestsWithDelayTimer(): ' + error
-      })
+        if (response.data.data.boards) {
+          let boardInfo = response.data.data.boards;
+          let ownerInfo = response.data.data.boards[0]["owners"];
+          let columnInfo = response.data.data.boards[0]["columns"];
 
+          console.log(boardInfo, ownerInfo, columnInfo);
+          console.log("READ boardInfo, ownerInfo, and columnInfo.");
+        } else {
+          console.error('malformed_query')
+          console.error(response.data.errors)
+        }
+      })
+      .catch((err)=> {
+        console.error('server_response')
+        console.error(err, `status_code: ${res.statusCode}`);
+      })
+      next();
     }
   },
   deleteBoardItems: async (req, res, next)=>{

@@ -29,7 +29,6 @@ Object.assign(module.exports, {
    * @param {number} MONDAY_APIV2_TOKEN_KURT Monday.com API Key with READ/WRITE access.
    */
   readItemsAndColumns: async (req, res, next) =>{
-    console.log(`READ Monday.com board values form board ID: ${mondayBoardID}`);
     {
       let query = `{
         boards (ids: ${mondayBoardID}) {
@@ -42,11 +41,13 @@ Object.assign(module.exports, {
               value
             }
           }
+        }
       }`;
       await axios.post(axiosURL,{query}, axiosConfig)
       .then((response)=>{
         if (response.data.data) {
           console.log(response.data.data.boards[0])
+          console.log(`READ items and item columns from boardID: ${mondayBoardID}`);
         } else {
           console.error('malformed_query')
           console.error(response.data.errors)

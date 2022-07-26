@@ -1,50 +1,15 @@
 const axios = require('axios')
 const _ = require('lodash');
-// TODO: Below variables not used. May Change.
-const fs = require('fs');
-const { JobList } = require('twilio/lib/rest/bulkexports/v1/export/job');
-const { json } = require('express/lib/response');
-const { clear } = require('console');
 
-// Note: These variables can be modified.
-const q2DuplicateBoard = 2887226992
-const projectTrsBoard = 2495489300
-
-//Note: Key Monday Board Variables. Do Not Change.
-const boardAMondayID = projectTrsBoard; // Board to be connect on, via item ids. (project trs board)
-const boardBMondayID = q2DuplicateBoard; // Board where items will be created. (time tracking board)
-
-let onlyArchivedPsCodesArray = require('../archivedPsCodes.json'); // Note: IDs used for filtering.
-let arrayOfProjectTrsBoardObjects; // Used in getProjectTRSBoardProjectData();
+/** Global Variables */
+let boardAMondayID = 2495489300; 
+let arrayOfProjectTrsBoardObjects;
 let timeEntryConditionNotSatisfied = [];
-let harvestTimeEntriesAndMondayUser = []; // Used in formatMondayTimeTrackingObj();
+let harvestTimeEntriesAndMondayUser = [];
 let projectsMissingMondayUser = [];
 let validatedPSTimeEntries = [];
 let entriesNotOnTRSBoard = [];
 let mondayBoardItemIds = [];
-
-//TODO: Revisit below variables and consider removing.
-let arrayOfProjectTrsPSCodes = [];
-let projectsWithTotalHours = [];
-let projectTrsItemsWithLinkedPulseIds = [];
-let timeEntryBoardItemColumnIds = [];
-let mondayBoardToItemsToReverseLinkTo = [];
-let fy2023Q1April = [];
-let testThis = [];
-let justJoesTimeEntries = [];
-let onlyArchivedProjects = [];
-let mikeAndMattProjects = [];
-
-// Quirks with using module.exports, when modules circularly depend on each other.
-// It is recommended against replacing the object.
-// For multiple exports at once, using object literal definition, implement the below
-// The exports object is created for your module before your module runs, 
-// and if there are circular dependencies, other modules may have access to that default object before your module can fill it in. 
-// If you replace it, they may have the old, original object, and not (eventually) see your exports. 
-// If you add to it, then even though the object didn't have your exports initially, eventually it will have it, even if the other module got access to the object before those exports existed.
-// https://nodejs.org/api/modules.html#modules_cycles
-
-// Express expects a Middleware function in order to run without failing.
 
 Object.assign(module.exports, {
   viewMondayBoardValues: async (req, res, next ) =>{

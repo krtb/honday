@@ -2,7 +2,7 @@ const axios = require('axios')
 const _ = require('lodash');
 
 /** Global Variables */
-let boardAMondayID = 2495489300; 
+let mondayBoardID = 2917043593;
 let arrayOfProjectTrsBoardObjects;
 let timeEntryConditionNotSatisfied = [];
 let harvestTimeEntriesAndMondayUser = [];
@@ -11,15 +11,28 @@ let validatedPSTimeEntries = [];
 let entriesNotOnTRSBoard = [];
 let mondayBoardItemIds = [];
 
-Object.assign(module.exports, {
-  viewMondayBoardValues: async (req, res, next ) =>{
-    // Note: This function serves as a READ operation. Not required for application to run.
-    console.log("READ Monday.com board Values.");
+/** Axios */
+const axiosURL = "https://api.monday.com/v2";
+const axiosConfig = {
+  headers: {
+    'Content-Type': `application/json`,
+    'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
+  },
+};
 
+Object.assign(module.exports, {
+  /**
+   * READ columns from provided Monday.com board.
+   * @async
+   * @function next From Express Router, allows Server to move on to next route.
+   * @param {number} mondayBoardID ID from Monday.com board being READ from.
+   * @param {number} MONDAY_APIV2_TOKEN_KURT Monday.com API Key with READ/WRITE access.
+   */
+  readItemsAndColumns: async (req, res, next) =>{
+    console.log(`READ Monday.com board values form board ID: ${mondayBoardID}`);
     {
-      const viewBoardColumns = `query { boards (ids: ${boardAMondayID}) { owner { id }  columns {   title   type }}}`;
       let query = `{
-        boards (ids: ${boardAMondayID}) {
+        boards (ids: ${mondayBoardID}) {
           items {
             id
             name
@@ -29,26 +42,19 @@ Object.assign(module.exports, {
               value
             }
           }
-        }
       }`;
-  
-      await axios.post("https://api.monday.com/v2",  {
-        'query': query,
-      },
-      {
-        headers: {
-          'Content-Type': `application/json`,
-          'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
-        },
-      },
-      )
+      await axios.post(axiosURL,{query}, axiosConfig)
       .then((response)=>{
-        
-        console.log(response)
-        
+        if (response.data.data) {
+          console.log(response.data.data.boards[0])
+        } else {
+          console.error('malformed_query')
+          console.error(response.data.errors)
+        }
       })
-      .catch((error)=>{
-        console.log('Here is my error:' + error, 'error');
+      .catch((err)=>{
+        console.error('Server Response...')
+        console.error(err, `status_code: ${res.statusCode}`);
       });
       next();
     }
@@ -545,7 +551,7 @@ Object.assign(module.exports, {
     let myFormattedTimeTrackingItems
 
     const mondayURL= "https://api.monday.com/v2";
-    const devMondayBoardID = 2635507777;
+    const mondayBoardID = 2635507777;
 
     let query = `mutation ( 
       $boardId: Int!, 
@@ -571,7 +577,7 @@ Object.assign(module.exports, {
 
         let aMondayTimeEntrySingularHours = JSON.stringify({
 
-          "boardId": devMondayBoardID,
+          "boardId": mondayBoardID,
           "myItemName": aTimeEntryAndMondayUser.timeTrackingItemTitle,
           "column_values": JSON.stringify({
             "person": {"personsAndTeams":[{"id": aTimeEntryAndMondayUser.matchingHarvestUserInMonday.id ,"kind":"person"}]},
@@ -594,7 +600,7 @@ Object.assign(module.exports, {
     //   myFormattedTimeTrackingItems = arrayOfSumProjectTotals.map((aProjectAndTotalHours)=> {
     //     let mondayProjectHoursTotaled = JSON.stringify({
           
-    //       "boardId": devMondayBoardID,
+    //       "boardId": mondayBoardID,
     //       "myItemName": aProjectAndTotalHours.timeTrackingItemTitle,
     //       "column_values": JSON.stringify({
     //         "numbers": aProjectAndTotalHours.totalHarvestUserHours,

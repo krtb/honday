@@ -27,7 +27,7 @@ const {
   getProjectTRSBoardProjectData, 
   compareHarvestCSVAndProjectTRSBoard,
   getUserFromMonday,
-  viewMondayBoardValues,
+  readItemsAndColumns,
   sumLastFiscalYear, 
   postMondayItems, 
   getHarvestCSVData,
@@ -67,18 +67,20 @@ const {
 /*================ Time Entry Section ================*/
 console.log('Honday Bot is Starting Work')
 //Note: To find which column value types to create
-// app.use(viewMondayBoardValues);
+app.use(readItemsAndColumns);
 //  TODO: find pulse ids, to pass into TRS board.
 
 //Note: Delete items from a board.
 // app.use(getMondayBoardItemIds);
 // app.use(deleteBoardItems);
 
-//TODO: CREATE NEW ITEMS
-app.use(getUserFromMonday);
-app.use(parseCSV);
-app.use(getProjectTRSBoardProjectData);
-app.use(compareHarvestCSVAndProjectTRSBoard);
+//TODO: CREATE NEW ITEMS --- main functions to migrate data.
+// app.use(getUserFromMonday);
+// app.use(parseCSV);
+// app.use(getProjectTRSBoardProjectData);
+// app.use(compareHarvestCSVAndProjectTRSBoard);
+// -------
+
 // app.use(postMondayItems);
 
 // parseCSV,

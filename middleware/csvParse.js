@@ -101,9 +101,15 @@ Object.assign(module.exports, {
       next();
     }
   },
-  deleteBoardItems: async (req, res, next)=>{
-    console.log('Starting deletion of Monday.com board items.');
-
+  /**
+   * DELETE Action for Items on a Monday.com board.
+   * Takes an array of Item Ids and deletes until it's length is reached.
+   * @async
+   * @param {array<strings>} mondayBoardItemIds - Board Item Ids, by which items are deleted in Monday.com.
+   * @function next From Express Router, allows Server to move on to next route.
+   */
+  deleteBoardItems: async (mondayBoardItemIds)=>{
+    console.log('===============> Starting DELETION of Monday.com board items! <================');
     {
       const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
 
@@ -138,11 +144,10 @@ Object.assign(module.exports, {
           await timer(1000); // Note: Timeout set, execution halted, when timeout completes, restart.
         }
         console.log(`===============> Finished deleting items! <================`);
-        return //Note: Break from sending requests.
+        return
       }
       loadAPIRequestsWithDelayTimer()
     }
-    
   },
   parseCSV: async (req, res, next) =>{
     console.log("Read Harvest CSV, map and transform values.");

@@ -8,7 +8,7 @@ const port = process.env.PORT || 8080;
 const { 
   boardOwnerColumnData,
   deleteBoardItems,
-  parseCSV,
+  mapCsvToData,
   getProjectTRSBoardProjectData, 
   compareHarvestCSVAndProjectTRSBoard,
   getUserFromMonday,
@@ -18,14 +18,14 @@ const {
 
 /** CREATE Actions */
 // app.use(getUserFromMonday);
-// app.use(parseCSV);
+// app.use(mapCsvToData);
 // app.use(getProjectTRSBoardProjectData);
 // app.use(compareHarvestCSVAndProjectTRSBoard);
 // app.use(postMondayItems);
 
 /** READ Actions */
-app.use(itemsColumnValuesData);
-app.use(boardOwnerColumnData);
+// app.use(itemsColumnValuesData);
+// app.use(boardOwnerColumnData);
 
 /** DELETE Actions */
 // app.use(deleteBoardItems);

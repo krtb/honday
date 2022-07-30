@@ -1,5 +1,7 @@
-const axios = require('axios')
+const axios = require('axios');
 const _ = require('lodash');
+
+const { parseCsvFileToData } = require('../utils/parseCSV.js');
 
 /** Global Variables */
 let mondayBoardID = process.env.MONDAY_DEV_BOARD_ID;
@@ -90,14 +92,15 @@ Object.assign(module.exports, {
           console.log(boardInfo, ownerInfo, columnInfo);
           console.log("READ boardInfo, ownerInfo, and columnInfo.");
         } else {
-          console.error('malformed_query')
-          console.error(response.data.errors)
+          console.error('malformed_query');
+          console.error(response.data.errors);
         }
       })
       .catch((err)=> {
-        console.error('server_response')
+        console.error('server_response');
         console.error(err, `status_code: ${res.statusCode}`);
-      })
+      });
+
       next();
     }
   },
@@ -151,36 +154,13 @@ Object.assign(module.exports, {
   },
   parseCSV: async (req, res, next) =>{
     console.log("Read Harvest CSV, map and transform values.");
-    // TODO: Revisit below variables and consider removing.
-    // const assert = require('assert');
-    // const os = require('os');
-    // const path = require('path');
-    // const debug = require('debug')('app:csv:service');
-    // const chalk = await import('chalk');
-
     {
-      const fs = require('fs');
-      const { parse } = require('csv-parse');
-      // Note: The `stream/promises` module only works on Node.js => version 16^
-      const { finished } = require('stream/promises'); 
-      const onlyCurrentHarvestProjects = './csvFiles/2022-07-01_harvest_time_export.csv'
-      const stream = fs.createReadStream(onlyCurrentHarvestProjects);
-      const parser = stream.pipe(parse({ delimiter: ',', columns: true,}));
-      const records = await [];
-
-      parser.on('readable', () => {
-        let record;
-        while ((record = parser.read()) !== null) {
-          records.push(record);
-        };
-      });
-
-      await finished(parser);
 
       {
-        // Create a copy of Records
-        const allMyRecords = records;
-        const arrayOfHarvestObjects = await allMyRecords.map((aSingleRecord)=>{
+        const csvFilePath = './csvFiles/2022-07-01_harvest_time_export.csv'
+        let allMyRecords = await parseCsvFileToData(csvFilePath)
+
+        const arrayOfHarvestObjects = allMyRecords.map((aSingleRecord)=>{
 
           if(aSingleRecord.Date >= '2022-02-01' && aSingleRecord.Date <= '2022-04-30'){
 

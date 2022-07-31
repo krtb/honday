@@ -63,7 +63,7 @@ Object.assign(module.exports, {
    */
   boardOwnerColumnData: async (req, res, next)=>{
     {
-      let query = `{{
+      let query = `{
         boards (ids: ${mondayBoardID}) {
           items {
             id

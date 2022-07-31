@@ -2,6 +2,7 @@ const axios = require('axios');
 const _ = require('lodash');
 
 const { parseCsvFileToData } = require('../utils/parseCSV.js');
+const { avoidTimeout } = require('../utils/avoidTimeout.js');
 
 /** Global Variables */
 let mondayBoardID = process.env.MONDAY_DEV_BOARD_ID;
@@ -68,17 +69,11 @@ Object.assign(module.exports, {
    */
   boardOwnerColumnData: async (req, res, next)=>{
     {
-      let query = `{
+      let query = `{{
         boards (ids: ${mondayBoardID}) {
-          name
-          state
-          board_folder_id
-          owners {
+          items {
             id
-          }
-          columns {
-            title
-            type
+            name
           }
         }
       }`;
@@ -106,53 +101,52 @@ Object.assign(module.exports, {
   },
   /**
    * DELETE Action for Items on a Monday.com board.
-   * Takes an array of Item Ids and deletes until it's length is reached.
-   * @async
-   * @param {array<strings>} mondayBoardItemIds - Board Item Ids, by which items are deleted in Monday.com.
-   * @function next From Express Router, allows Server to move on to next route.
+   * @param {number} mondayBoardID - Id from a Monady board url.
+   * (.com/boards/number) Set as a global variable.
+   * First will ready from Board, GET items if available, then DELETE.
    */
-  deleteBoardItems: async (mondayBoardItemIds)=>{
-    console.log('===============> Starting DELETION of Monday.com board items! <================');
-    {
-      const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
+  deleteBoardItems: async (req, res, next)=>{
+    console.log('=============== Starting DELETION of items! ===============');
 
-      async function loadAPIRequestsWithDelayTimer() {
-        //Note: Send POST request with 1 second delay to avoid server timeout. Loop must be wrapped in a async function.
-        for (var i = 0; i <= mondayBoardItemIds.length - 1; mondayBoardItemIds[i++]) {
-          console.log(`Deleting board item ${i} of ${mondayBoardItemIds.length - 1}`);
-
-          let query = `mutation { delete_item (item_id: ${mondayBoardItemIds[i].id}) { id }}`;
-
-          axios.post("https://api.monday.com/v2",
-          {
-            'query': query,
-            'variables': mondayBoardItemIds[i]
-          }, 
-          {
-            headers: {
-              'Content-Type': `application/json`,
-              'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
-            },
+      let getBoardItemIds = `{
+          boards (ids: ${mondayBoardID}) {
+            items {
+              id
+            }
           }
-          )
-          .then((response)=>{
-            let serverResponse = response.data.errors? response.errors[0] : "Status: Success, item deleted!"
-            console.log(serverResponse);
+        }`;
 
-            return response
-          })
-          .catch((error)=> {
-            'There was an error in loadAPIRequestsWithDelayTimer(): ' + error
-          })
-          await timer(1000); // Note: Timeout set, execution halted, when timeout completes, restart.
+      let idsFromBoards = []
+
+      await axios.post(axiosURL, {query : getBoardItemIds}, axiosConfig)
+      .then(res => {
+        try {
+          if((!res.data.errors) && 
+          (typeof res.data.data.boards[0].items === 'object') &&
+          ( res.data.data.boards[0].items.length > 0) 
+          ){
+            let onlyMyIds = res.data.data.boards[0].items.map((anItem)=> anItem.id? anItem.id : 'Missing Ids')
+            idsFromBoards.push(onlyMyIds)
+          } else if(res.data.data.boards[0].items.length === 0){
+            console.error(`---> ${res.data.data.boards[0].items.length} Items, none to delete ...`)
+          } 
+          else {
+            console.error(res.data.errors, `---> Monday.com returned an error ...`)
+          }
+        } catch (error) {
+          console.error(error, `---> Malformed Query ... `);
         }
-        console.log(`===============> Finished deleting items! <================`);
-        return
+      })
+      .catch((err)=>{
+        console.error(err, `---> Server Error ... `)
+      })
+      
+      if(idsFromBoards.length > 0){
+        await avoidTimeout(idsFromBoards, axiosURL, true)
       }
-      loadAPIRequestsWithDelayTimer()
-    }
+      
   },
-  parseCSV: async (req, res, next) =>{
+  mapCsvToData: async (req, res, next) =>{
     console.log("Read Harvest CSV, map and transform values.");
     {
 
@@ -292,7 +286,7 @@ Object.assign(module.exports, {
     }
   },
   compareHarvestCSVAndProjectTRSBoard: async (req, res, next)=> {
-    var arrayOfHarvestObjects = [...new Set(res.locals.arrayOfHarvestObjects)];; //Note: Set in parseCSV() function
+    var arrayOfHarvestObjects = [...new Set(res.locals.arrayOfHarvestObjects)];; //Note: Set in mapCsvToData() function
 
     {
       //Note: Utility Functions
@@ -453,7 +447,7 @@ Object.assign(module.exports, {
         }
       }
 
-      //Note: Set in parseCSV() function.
+      //Note: Set in mapCsvToData() function.
       arrayOfHarvestObjects.forEach((aHarvestObj)=>{
         formatMondayTimeTrackingObj(aHarvestObj)
       });
@@ -608,7 +602,9 @@ Object.assign(module.exports, {
     async function loadAPIRequestsWithDelayTimer() {
       //Note: Send POST request with 1 second delay to avoid server timeout. Loop must be wrapped in a async function.
       for (var i = 0; i <= myFormattedTimeTrackingItems.length - 1; i++) {
+
         console.log(`Currently on item ${i} of  ${myFormattedTimeTrackingItems.length - 1}`)
+
         axios.post(mondayURL,
           {
             'query': query,

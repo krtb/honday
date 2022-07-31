@@ -18,7 +18,7 @@ const {
   mapCsvToData,
   compareHarvestCSVAndProjectTRSBoard,
   postMondayItems,
-} = require('./middleware/harvest_migrations');
+} = require('./middleware/migrate_getharvest.com');
 
 /** CREATE Actions */
 // app.use(getUserFromMonday);

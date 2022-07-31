@@ -10,11 +10,15 @@ const {
   deleteBoardItems,
   mapCsvToData,
   getProjectTRSBoardProjectData, 
-  compareHarvestCSVAndProjectTRSBoard,
   getUserFromMonday,
   itemsColumnValuesData,
-  postMondayItems, 
-} = require('./middleware/csvParse');
+} = require('./middleware/monday_api_methods');
+
+const { 
+  mapCsvToData,
+  compareHarvestCSVAndProjectTRSBoard,
+  postMondayItems,
+} = require('./middleware/harvest_migrations');
 
 /** CREATE Actions */
 // app.use(getUserFromMonday);
@@ -28,7 +32,7 @@ const {
 // app.use(boardOwnerColumnData);
 
 /** DELETE Actions */
-// app.use(deleteBoardItems);
+app.use(deleteBoardItems);
 
 app.get('/', function (req, res) {
   var responseText = 'Hello, World!'

@@ -1,4 +1,7 @@
+# Custom Files
+csvFiles/
 toDelete.js
+
 # Logs
 logs
 *.log

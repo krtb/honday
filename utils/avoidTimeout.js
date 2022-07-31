@@ -1,18 +1,5 @@
 const axios = require('axios');
 
-/** Global Variables */
-let queryTemplate = {
-  'query': {},
-  'variables': []
-}
-
-let headersTemplate = {
-  headers: {
-    'Content-Type': `application/json`,
-    'Authorization': `${process.env.MONDAY_PIV2_TOKEN_KURT}` 
-  },
-}
-
 /**
  * Quirks with using module.exports, when modules circularly depend on each other.
  * It is recommended against replacing the object.
@@ -37,31 +24,36 @@ Object.assign(module.exports,
       * @param {object} defaultQuery - defaults to global queryTemplate variable, which Axius consumes.
       * @param {object} defaultHeaders - defaults to global headersTemplate variable, which Axios consumes
       */
-    avoidTimeout: async function avoidTimeout(req, res, next, myArrayOfItems, axiosURL, defaultQuery = queryTemplate, defaultHeaders = headersTemplate) {
+    avoidTimeout: async function avoidTimeout(myArrayOfItems, axiosURL, deletionSwitch = false, defaultQuery) {
       const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
 
       let onlyArray = myArrayOfItems[0]
 
       async function loadAPIRequestsWithDelayTimer() {
-        for (var i = 0; i < onlyArray.length - 1; i++) {
-          console.log(`On item ${i + 1} of ${onlyArray.length - 1}...` );
+        for (var i = 0; i < onlyArray.length; i++) {
+          console.log(`On item ${i + 1} of ${onlyArray.length}...` );
 
-          let query = `mutation { delete_item (item_id: ${onlyArray[i]}) { id }}`;
+          /** If deleting items, use deletion object. */
+          if (deletionSwitch === true) {
+            defaultQuery = `mutation { delete_item (item_id: ${onlyArray[i]}) { id }}`;
+          } else {
+            console.log('Delete Switch OFF...')
+          }
 
           axios.post(axiosURL, 
-            {query}       
+            {query: defaultQuery}
             , 
             {headers: {
               'Content-Type': `application/json`,
               'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
             },
           })
-            .then(res =>{ 
-              console.log(res, `<---- Item ${i + 1} Deleted...`)
-            })
-            .then(res =>{ 
-              console.log(JSON.stringify(res, null, 2), '<--- Message... ')
-            })
+          .then(res =>{ 
+            console.log(res.data.data, `<---- Item ${i + 1} Deleted...`)
+            if(res.data.errors){
+              console.log(res.data.errors, '<--- Errors returned from Monday.com... ')
+            }
+          })
           .catch((error)=>{ 
             console.log('There was an error here: ' + error)
           })
@@ -71,7 +63,7 @@ Object.assign(module.exports,
         console.log('=============== Deletion Complete! ================');
       }
       loadAPIRequestsWithDelayTimer()
-      return
+      
     }
   }
 );

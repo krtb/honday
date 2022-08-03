@@ -43,7 +43,7 @@ Object.assign(module.exports, {
       .then((response)=>{
         if (response.data.data.boards) {
           console.log(response.data.data.boards[0])
-          console.log(`READ items and item columns.`);
+          console.log(`READ ${response.data.data.boards[0].items.length} items and item columns.`);
         } else {
           console.error('malformed_query')
           console.error(response.data.errors)
@@ -225,5 +225,64 @@ Object.assign(module.exports, {
       console.log(`${arrayOfProjectTrsBoardObjects.length - 1}` + ` board A Items Collected from: ProjectTrsBoard`)
       next()
     }
-  }
+  },
+  getItemsEditItemName: async (req,res,next)=>{
+    {
+      let itemIdNameAndColumnValues = `{
+        boards (ids: ${mondayBoardID}) {
+          items {
+            id
+            name
+            column_values {
+              id
+            }
+          }
+        }
+      }`;
+
+      let mondayItemObjectIdName = [];
+      await axios.post(axiosURL,{query: itemIdNameAndColumnValues}, axiosConfig)
+      .then((response)=>{
+
+        if (response.data.data.boards) {
+
+          let items = response.data.data.boards[0].items
+          items.forEach((singleItem) => {
+            let itemID = singleItem.id
+            mondayItemObjectIdName.push(itemID)
+          })
+
+          console.log(mondayItemObjectIdName, '<--- item ids to EDIT...')
+          console.log(`READ ${response.data.data.boards[0].items.length} items and item columns.`);
+
+        } else {
+          console.error('malformed_query')
+          console.error(response.data.errors)
+        }
+      })
+      .catch((err)=>{
+        console.error('server_response')
+        console.error(err, `status_code: ${res.statusCode}`);
+      });
+
+      function mapDataToQuery(mondayItemObjectIdName) {
+        let holdMutations = [];
+        mondayItemObjectIdName.map((anItemId)=>{
+          let itemTitleToChange = '{"name": "Kurt changed the item name."}'
+          let myJSONString = JSON.stringify(itemTitleToChange, null, 2);
+
+          let stringifiedQuery = `mutation { change_multiple_column_values (item_id: ${anItemId}, board_id: ${mondayBoardID}, column_values: ${myJSONString} ) {name} }`;
+
+          holdMutations.push(stringifiedQuery);
+        })
+        return holdMutations
+      }
+
+      let itemIdsWithGraphQlFormat = await mapDataToQuery(mondayItemObjectIdName)
+
+      if(mondayItemObjectIdName.length > 0){
+        await avoidTimeout(mondayItemObjectIdName, itemIdsWithGraphQlFormat)
+      }
+    }
+  },
 });

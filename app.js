@@ -8,10 +8,10 @@ const port = process.env.PORT || 8080;
 const { 
   boardOwnerColumnData,
   deleteBoardItems,
-  mapCsvToData,
   getProjectTRSBoardProjectData, 
   getUserFromMonday,
   itemsColumnValuesData,
+  getItemsEditItemName,
 } = require('./middleware/monday_api_methods');
 
 const { 
@@ -31,8 +31,11 @@ const {
 // app.use(itemsColumnValuesData);
 // app.use(boardOwnerColumnData);
 
+/** EDIT Actions */
+app.use(getItemsEditItemName);
+
 /** DELETE Actions */
-app.use(deleteBoardItems);
+// app.use(deleteBoardItems);
 
 app.get('/', function (req, res) {
   var responseText = 'Hello, World!'

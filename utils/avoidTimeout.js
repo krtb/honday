@@ -1,4 +1,5 @@
 const axios = require('axios');
+const axiosURL = "https://api.monday.com/v2";
 
 /**
  * Quirks with using module.exports, when modules circularly depend on each other.
@@ -24,35 +25,41 @@ Object.assign(module.exports,
       * @param {object} defaultQuery - defaults to global queryTemplate variable, which Axius consumes.
       * @param {object} defaultHeaders - defaults to global headersTemplate variable, which Axios consumes
       */
-    avoidTimeout: async function avoidTimeout(myArrayOfItems, axiosURL, deletionSwitch = false, defaultQuery) {
+    avoidTimeout: async function avoidTimeout(myArrayOfItems, defaultQuery, deletionSwitch = false) {
       const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
 
-      let onlyArray = myArrayOfItems[0]
+      /** If deleting items, then comment back in the below. */
+      // let onlyArray = myArrayOfItems[0]
 
       async function loadAPIRequestsWithDelayTimer() {
-        for (var i = 0; i < onlyArray.length; i++) {
-          console.log(`On item ${i + 1} of ${onlyArray.length}...` );
+        for (var i = 0; i < defaultQuery.length; i++) {
+          console.log(`item ${i + 1} of ${defaultQuery.length}...`,  defaultQuery[i] );
 
           /** If deleting items, use deletion object. */
-          if (deletionSwitch === true) {
-            defaultQuery = `mutation { delete_item (item_id: ${onlyArray[i]}) { id }}`;
-          } else {
-            console.log('Delete Switch OFF...')
-          }
+          // if (deletionSwitch === true) {
+          //   defaultQuery = `mutation { delete_item (item_id: ${onlyArray[i]}) { id }}`;
+          // } else {
+          //   console.log('Delete Switch OFF...')
+          // }
 
-          axios.post(axiosURL, 
-            {query: defaultQuery}
-            , 
-            {headers: {
+          axios.post(axiosURL,
+            {query: defaultQuery[i] },
+            { 
+              headers: {
               'Content-Type': `application/json`,
               'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
-            },
-          })
-          .then(res =>{ 
-            console.log(res.data.data, `<---- Item ${i + 1} Deleted...`)
-            if(res.data.errors){
-              console.log(res.data.errors, '<--- Errors returned from Monday.com... ')
+              },
             }
+          )
+          .then(res =>{ 
+
+            if(!res.data.errors){
+              console.log(res.data.data, `<---- Item ${i + 1} Deleted...`, res.data)
+              console.log(defaultQuery[i], '<--- Current default query being sent')
+            } else {
+              console.log(res.data.errors, res.data.errors[0].locations, '<--- Errors returned from Monday.com... ',)
+            }
+
           })
           .catch((error)=>{ 
             console.log('There was an error here: ' + error)

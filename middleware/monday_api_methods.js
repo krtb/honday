@@ -274,7 +274,7 @@ Object.assign(module.exports, {
       function mapDataToQuery(mondayItemObjectIdName) {
         let holdMutations = [];
         mondayItemObjectIdName.map((anItemId)=>{
-          let itemTitleToChange = '{"name": "Change of name."}'
+          let itemTitleToChange = '{"name": "Change name."}'
           let myJSONString = JSON.stringify(itemTitleToChange, null, 2);
 
           let stringifiedQuery = `mutation { change_multiple_column_values (item_id: ${anItemId}, board_id: ${mondayBoardID}, column_values: ${myJSONString} ) {name} }`;
@@ -284,7 +284,7 @@ Object.assign(module.exports, {
         return holdMutations
       }
 
-      let itemIdsWithGraphQlFormat = await mapDataToQuery(mondayItemObjectIdName)
+      let itemIdsWithGraphQlFormat = mapDataToQuery(mondayItemObjectIdName)
 
       if(mondayItemObjectIdName.length > 0){
         await avoidTimeout(mondayItemObjectIdName, itemIdsWithGraphQlFormat)

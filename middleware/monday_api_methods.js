@@ -97,7 +97,7 @@ Object.assign(module.exports, {
    * DELETE Action for Items on a Monday.com board.
    * @param {number} mondayBoardID - Id from a Monady board url.
    * (.com/boards/number) Set as a global variable.
-   * First will ready from Board, GET items if available, then DELETE.
+   * First will READ Items from Board, GET items if available, then DELETE all items.
    */
   deleteBoardItems: async (req, res, next)=>{
     console.log('=============== Starting DELETION of items! ===============');
@@ -226,6 +226,12 @@ Object.assign(module.exports, {
       next()
     }
   },
+    /**
+   * EDIT Action for Items on a Monday.com board.
+   * @param {number} mondayBoardID - Id from a Monady board url.
+   * (.com/boards/number) Set as a global variable.
+   * First will READ Items from Board, GET items if avaiblable, then will EDIT all item names on board.
+   */
   getItemsEditItemName: async (req,res,next)=>{
     {
       let itemIdNameAndColumnValues = `{

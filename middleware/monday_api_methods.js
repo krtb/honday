@@ -172,60 +172,6 @@ Object.assign(module.exports, {
       next()
     }
   },
-  getProjectTRSBoardProjectData: async (req, res, next)=>{
-    //Note: Required in order to create Linked Items via their IDs.
-    console.log("Pulling Board A project items, to match against CSV IDs of: Harvest PS Codes.");
-
-    {
-      const projectTrsBoard = 2495489300;
-      
-      let query = `{
-        boards (ids: ${projectTrsBoard}) {
-          items {
-            id
-            name
-            column_values {
-              id
-              title
-              value
-            }
-          }
-        }
-      }`;
-
-      //Note: Utility functions --->
-      const projectTRSBoardObjectsCollection = []
-      function collectBoardAColumnNameAndIDItems(boardAItems) {
-          const projectTrsItemsNameIdColumnObjects = boardAItems
-          projectTrsItemsNameIdColumnObjects.map((boardAItem)=>{
-            projectTRSBoardObjectsCollection.push(boardAItem)
-          })
-      }
-  
-      await axios.post("https://api.monday.com/v2",  {
-        'query': query,
-      },
-      {
-        headers: {
-          'Content-Type': `application/json`,
-          'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
-        },
-      })
-      .then((response)=>{
-        let itemsFromResponse = response.data.data.boards[0].items
-        
-        collectBoardAColumnNameAndIDItems(itemsFromResponse)
-        arrayOfProjectTrsBoardObjects = itemsFromResponse
-
-      })
-      .catch((error)=>{
-        console.log('Here is my error:' + error, 'error');
-      })
-
-      console.log(`${arrayOfProjectTrsBoardObjects.length - 1}` + ` board A Items Collected from: ProjectTrsBoard`)
-      next()
-    }
-  },
   /**
    * EDIT Action for Items on a Monday.com board.
    * @param {number} mondayBoardID - Id from a Monady board url.

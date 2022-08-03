@@ -226,7 +226,7 @@ Object.assign(module.exports, {
       next()
     }
   },
-    /**
+  /**
    * EDIT Action for Items on a Monday.com board.
    * @param {number} mondayBoardID - Id from a Monady board url.
    * (.com/boards/number) Set as a global variable.
@@ -274,7 +274,7 @@ Object.assign(module.exports, {
       function mapDataToQuery(mondayItemObjectIdName) {
         let holdMutations = [];
         mondayItemObjectIdName.map((anItemId)=>{
-          let itemTitleToChange = '{"name": "Kurt changed the item name."}'
+          let itemTitleToChange = '{"name": "Change of name."}'
           let myJSONString = JSON.stringify(itemTitleToChange, null, 2);
 
           let stringifiedQuery = `mutation { change_multiple_column_values (item_id: ${anItemId}, board_id: ${mondayBoardID}, column_values: ${myJSONString} ) {name} }`;

@@ -1,11 +1,12 @@
 const axios = require('axios');
 const _ = require('lodash');
 
-const { parseCsvFileToData } = require('../utils/parseCSV.js');
 const { avoidTimeout } = require('../utils/avoidTimeout.js');
+const { writeJsonToFile } = require('../utils/readWriteJSON.js')
 
 /** Global Variables */
-let mondayBoardID = process.env.MONDAY_DEV_BOARD_ID;
+let mondayBoardID = process.env.MONDAY_TRS_BOARD_ID;
+// MONDAY_DEV_BOARD_ID;
 let arrayOfProjectTrsBoardObjects;
 
 /** Axios */
@@ -27,7 +28,7 @@ Object.assign(module.exports, {
     {
       let query = `{
         boards (ids: ${mondayBoardID}) {
-          items {
+          items (limit:100) {
             id
             name
             column_values {
@@ -39,10 +40,14 @@ Object.assign(module.exports, {
           }
         }
       }`;
+
+      let containAllItemsAndColumns = []
       await axios.post(axiosURL,{query}, axiosConfig)
       .then((response)=>{
         if (response.data.data.boards) {
-          console.log(response.data.data.boards[0])
+          response.data.data.boards[0].items.forEach(anItem => {
+            containAllItemsAndColumns.push([anItem.id, anItem.column_values])
+          })
           console.log(`READ ${response.data.data.boards[0].items.length} items and item columns.`);
         } else {
           console.error('malformed_query')
@@ -53,7 +58,8 @@ Object.assign(module.exports, {
         console.error('server_response')
         console.error(err, `status_code: ${res.statusCode}`);
       });
-      next();
+
+      writeJsonToFile(containAllItemsAndColumns)
     }
   },
   /**

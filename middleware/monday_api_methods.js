@@ -152,10 +152,10 @@ Object.assign(module.exports, {
 
     {
       let allMondayUsersContainer = [];
-      let query = "query { users { email id name} }"
+      let usersEmailIdName = "query { users { email id name} }"
       
       await axios.post("https://api.monday.com/v2",  {
-        'query': query,
+        'query': usersEmailIdName,
       }, {
           headers: {
             'Content-Type': `application/json`,

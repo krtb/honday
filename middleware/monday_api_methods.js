@@ -2,7 +2,7 @@ const axios = require('axios');
 const _ = require('lodash');
 
 const { avoidTimeout } = require('../utils/avoidTimeout.js');
-const { writeJsonToFile } = require('../utils/readWriteJSON.js')
+const { writeJsonToFile, readFromJsonFile } = require('../utils/readWriteJSON.js')
 
 /** Global Variables */
 let mondayBoardID = process.env.MONDAY_TRS_BOARD_ID;
@@ -58,8 +58,8 @@ Object.assign(module.exports, {
         console.error('server_response')
         console.error(err, `status_code: ${res.statusCode}`);
       });
-
-      writeJsonToFile(containAllItemsAndColumns)
+      readFromJsonFile()
+      // writeJsonToFile(containAllItemsAndColumns)
     }
   },
   /**

@@ -1,5 +1,6 @@
 let fs = require('fs');
 let fileOutputPath = './outputFiles/outputData.json'
+let fileInputPath = './outputFiles/outputData.json'
 /**
  * Quirks with using module.exports, when modules circularly depend on each other.
  * It is recommended against replacing the object.
@@ -19,10 +20,11 @@ let fileOutputPath = './outputFiles/outputData.json'
 Object.assign(module.exports, 
   { 
     /**
-     * Write input JSON formatted input data to local file.
-     * @param {objects} inputData - JSON input data to be output to file.
+     * WRITE JSON to file.
+     * @param (inputData) inputData - JSON object data that will be used to create JSON file.
+     * @param (fileOutputPath)
      */
-    writeJsonToFile: async function writeJsonToFile(inputData) {      
+    writeJsonToFile: async function writeJsonToFile(inputData, fileOutputPath) {      
       /** convert JSON object to string & pretty-print */
       const data = JSON.stringify(inputData, null, 4);
       
@@ -32,6 +34,25 @@ Object.assign(module.exports,
               throw err;
           }
           console.log("JSON data is saved.");
+      });
+    },
+    /**
+     * READ from JSON file.
+     * @param (fileInputPath) - Location of file to be READ and output to console.
+     */
+    readFromJsonFile: async function readFromJsonFile(fileInputPath){
+
+      /** read JSON object from file */
+      fs.readFile('./outputFiles/outputData.json', 'utf-8', (err, data) => {
+        if (err) {
+            throw err;
+        }
+
+        /** parse JSON object */
+        const parsedJSONData = JSON.parse(data.toString());
+
+        /** print JSON object */
+        console.log(parsedJSONData);
       });
     }
   }

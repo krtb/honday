@@ -1,6 +1,7 @@
 let fs = require('fs');
 let fileOutputPath = './outputFiles/outputData.json'
-let fileInputPath = './outputFiles/outputData.json'
+let fileInputPath = './inputFiles/inputData.json'
+
 /**
  * Quirks with using module.exports, when modules circularly depend on each other.
  * It is recommended against replacing the object.
@@ -29,7 +30,7 @@ Object.assign(module.exports,
       const data = JSON.stringify(inputData, null, 4);
       
       /** write JSON string to a file */
-      fs.writeFile(fileOutputPath, data, (err) => {
+      fs.writeFile('./outputFiles/outputData.json', data, (err) => {
           if (err) {
               throw err;
           }

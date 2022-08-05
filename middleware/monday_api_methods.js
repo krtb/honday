@@ -2,7 +2,8 @@ const axios = require('axios');
 const _ = require('lodash');
 
 const { avoidTimeout } = require('../utils/avoidTimeout.js');
-const { writeJsonToFile, readFromJsonFile } = require('../utils/readWriteJSON.js')
+const { writeJsonToFile, readFromJsonFile } = require('../utils/readWriteJSON.js');
+const test_json_file = require('../inputFiles/inputData.json');
 
 /** Global Variables */
 let mondayBoardID = process.env.MONDAY_TRS_BOARD_ID;
@@ -24,31 +25,39 @@ Object.assign(module.exports, {
    * @async
    * @function next From Express Router, allows Server to move on to next route.
    */
-  itemsColumnValuesData: async (req, res, next) =>{
+  boardItemIdsTotalCount: async (req, res, next) =>{
     {
-      let query = `{
+      let readBoardItemsID = `{
         boards (ids: ${mondayBoardID}) {
-          items (limit:100) {
+          items {
             id
             name
-            column_values {
-              id
-              title
-              value
-              text
-            }
           }
         }
       }`;
 
+      // TODO: Remove this after pushing changes.
       let containAllItemsAndColumns = []
-      await axios.post(axiosURL,{query}, axiosConfig)
+
+      await axios.post(axiosURL,{query: readBoardItemsID}, axiosConfig)
+
       .then((response)=>{
         if (response.data.data.boards) {
+          // containAllItemsAndColumns.push(response.data.data.boards[0].items)
+          
+          res.locals.totalItemIdsCount = response.data.data.boards[0].items.length
+          res.locals.itemIds = response.data.data.boards[0].items
+
+          // TODO: Remove this.
+          let justNames = [];
+          
           response.data.data.boards[0].items.forEach(anItem => {
-            containAllItemsAndColumns.push([anItem.id, anItem.column_values])
+            justNames.push(anItem.name)
           })
-          console.log(`READ ${response.data.data.boards[0].items.length} items and item columns.`);
+
+          writeJsonToFile(justNames);
+
+          console.log(`READ ${res.locals.totalItemIdsCount} items and item columns.`);
         } else {
           console.error('malformed_query')
           console.error(response.data.errors)
@@ -58,7 +67,9 @@ Object.assign(module.exports, {
         console.error('server_response')
         console.error(err, `status_code: ${res.statusCode}`);
       });
-      readFromJsonFile()
+      next()
+
+      // readFromJsonFile()
       // writeJsonToFile(containAllItemsAndColumns)
     }
   },
@@ -71,9 +82,15 @@ Object.assign(module.exports, {
     {
       let query = `{
         boards (ids: ${mondayBoardID}) {
-          items {
+          items (limit: 100) {
             id
             name
+            column_values {
+              id
+              title
+              value
+              text
+            }
           }
         }
       }`;
@@ -198,49 +215,67 @@ Object.assign(module.exports, {
         }
       }`;
 
-      let mondayItemObjectIdName = [];
-      await axios.post(axiosURL,{query: itemIdNameAndColumnValues}, axiosConfig)
-      .then((response)=>{
-
-        if (response.data.data.boards) {
-
-          let items = response.data.data.boards[0].items
-          items.forEach((singleItem) => {
-            let itemID = singleItem.id
-            mondayItemObjectIdName.push(itemID)
-          })
-
-          console.log(mondayItemObjectIdName, '<--- item ids to EDIT...')
-          console.log(`READ ${response.data.data.boards[0].items.length} items and item columns.`);
-
-        } else {
-          console.error('malformed_query')
-          console.error(response.data.errors)
-        }
-      })
-      .catch((err)=>{
-        console.error('server_response')
-        console.error(err, `status_code: ${res.statusCode}`);
-      });
-
-      function mapDataToQuery(mondayItemObjectIdName) {
-        let holdMutations = [];
-        mondayItemObjectIdName.map((anItemId)=>{
-          let itemTitleToChange = '{"name": "Change name."}'
-          let myJSONString = JSON.stringify(itemTitleToChange, null, 2);
-
-          let stringifiedQuery = `mutation { change_multiple_column_values (item_id: ${anItemId}, board_id: ${mondayBoardID}, column_values: ${myJSONString} ) {name} }`;
-
-          holdMutations.push(stringifiedQuery);
+      // TODO: Uncomment after testing local JSON file.
+      // let totalItemIdsCount = res.locals.totalItemIdsCount
+      // let itemIds = res.locals.itemIds.map((singleItem) => singleItem.id)
+      // let itemNames = res.locals.itemIds.map((singleItem) => singleItem.name)
+      
+      function parseOnSepcifiedStringCharacter(arrayofStrings) {
+        let mycounter = [];
+        arrayofStrings.forEach((aString)=> {
+          let onlyCheckForFirstCharacter = aString.split('')[0];
+          if (onlyCheckForFirstCharacter === '(' ) {
+            mycounter.push(aString)
+          }
         })
-        return holdMutations
+        return mycounter
+      }
+      
+      let myProjectsToEdit = parseOnSepcifiedStringCharacter(test_json_file)
+
+      function reverseString(arrayOfStrings) {
+        let myMap = arrayOfStrings.map((aProjectItem)=>{
+          let paranAndPSNumber = aProjectItem.split(')');
+          let mergedParans = paranAndPSNumber[0] + ")";
+          let projectName = paranAndPSNumber[1]
+          let nameSpaceRemoved = projectName.split('').splice(1,projectName.length).join('')
+          let reversedProjectTRSItem = nameSpaceRemoved + " " + mergedParans
+          return reversedProjectTRSItem
+        })
+        return myMap
       }
 
-      let itemIdsWithGraphQlFormat = mapDataToQuery(mondayItemObjectIdName)
+      let testingThis = reverseString(myProjectsToEdit)
+      // console.log(testingThis, `<--- logging my test case here: testingThis ---`);
+      
+      writeJsonToFile(testingThis)
 
-      if(mondayItemObjectIdName.length > 0){
-        await avoidTimeout(mondayItemObjectIdName, itemIdsWithGraphQlFormat)
-      }
+      // console.log(testingThis, `<--- logging my test case here: testingThis ---`);
+
+      // console.log(myProjectsToEdit, `<--- logging my test case here: myProjectsToEdit ---`);
+
+      // function mapDataToQuery(totalItemIdsCount) {
+      //   let holdMutations = totalItemIdsCount.map((anItemId)=>{
+
+      //     let itemTitleToChange = '{"name": "Change name."}'
+
+      //     let myJSONString = JSON.stringify(itemTitleToChange, null, 2);
+
+      //     let stringifiedQuery = `mutation { change_multiple_column_values (item_id: ${anItemId}, board_id: ${mondayBoardID}, column_values: ${myJSONString} ) {name} }`;
+
+      //     holdMutations.push(stringifiedQuery);
+      //   })
+      //   return holdMutations
+      // }
+
+      // let itemIdsWithGraphQlFormat = mapDataToQuery(totalItemIdsCount)
+
+      //TODO: Comment back in after validating that data editing will occur as expected with import.
+      //TODO: Get total of Monday board and bulk edit but 100 item limit.
+      //TODO: Output result locallt as JSON file, send to Charlotte.
+      // if(mondayItemObjectIdName.length > 0){
+      //   await avoidTimeout(mondayItemObjectIdName, itemIdsWithGraphQlFormat)
+      // }
     }
   },
 });

@@ -22,28 +22,20 @@ Object.assign(module.exports,
     /**
       * Avoid server throttling requests due to exceeding timeout limit from API.
       * @param {array} arrayOfItemsToSend - File location of your CSV file.
-      * @param {object} defaultQuery - defaults to global queryTemplate variable, which Axius consumes.
+      * @param {object} listOfItems - defaults to global queryTemplate variable, which Axius consumes.
       * @param {object} defaultHeaders - defaults to global headersTemplate variable, which Axios consumes
       */
-    avoidTimeout: async function avoidTimeout(myArrayOfItems, defaultQuery, deletionSwitch = false) {
+    avoidTimeout: async function avoidTimeout(listOfItems) {
+
       const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
 
-      /** If deleting items, then comment back in the below. */
-      // let onlyArray = myArrayOfItems[0]
-
       async function loadAPIRequestsWithDelayTimer() {
-        for (var i = 0; i < defaultQuery.length; i++) {
-          console.log(`item ${i + 1} of ${defaultQuery.length}...`,  defaultQuery[i] );
+        for (var i = 0; i < listOfItems.length; i++) {
 
-          /** If deleting items, use deletion object. */
-          // if (deletionSwitch === true) {
-          //   defaultQuery = `mutation { delete_item (item_id: ${onlyArray[i]}) { id }}`;
-          // } else {
-          //   console.log('Delete Switch OFF...')
-          // }
+          console.log(`item ${i + 1} of ${listOfItems.length}...`,  listOfItems[i] )
 
           axios.post(axiosURL,
-            {query: defaultQuery[i] },
+            {query: listOfItems[i] },
             { 
               headers: {
               'Content-Type': `application/json`,
@@ -55,7 +47,7 @@ Object.assign(module.exports,
 
             if(!res.data.errors){
               console.log(res.data.data, `<---- Item ${i + 1} Deleted...`, res.data)
-              console.log(defaultQuery[i], '<--- Current default query being sent')
+              console.log(listOfItems[i], '<--- Current default query being sent')
             } else {
               console.log(res.data.errors, res.data.errors[0].locations, '<--- Errors returned from Monday.com... ',)
             }
@@ -64,9 +56,11 @@ Object.assign(module.exports,
           .catch((error)=>{ 
             console.log('There was an error here: ' + error)
           })
+          
           await timer(1000);
 
         }
+
         console.log('=============== Deletion Complete! ================');
       }
       loadAPIRequestsWithDelayTimer()

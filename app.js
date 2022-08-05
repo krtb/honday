@@ -9,7 +9,7 @@ const {
   boardOwnerColumnData,
   deleteBoardItems,
   getUserFromMonday,
-  itemsColumnValuesData,
+  boardItemIdsTotalCount,
   getItemsEditItemName,
 } = require('./middleware/monday_api_methods');
 
@@ -27,11 +27,11 @@ const {
 // app.use(postMondayItems);
 
 /** READ Actions */
-app.use(itemsColumnValuesData);
+// app.use(boardItemIdsTotalCount); //TODO: using
 // app.use(boardOwnerColumnData);
 
 /** EDIT Actions */
-// app.use(getItemsEditItemName);
+app.use(getItemsEditItemName); //TODO: using
 
 /** DELETE Actions */
 // app.use(deleteBoardItems);

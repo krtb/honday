@@ -1,6 +1,10 @@
 let fs = require('fs');
-let fileOutputPath = './outputFiles/outputData.json'
-let fileInputPath = './inputFiles/inputData.json'
+let path = require('path');
+
+/** https://stackoverflow.com/questions/28590737/enoent-error-when-using-fs-writefile */
+
+// let fileOutputPath = './outputFiles/outputData.json'
+// let fileInputPath = './inputFiles/inputData.json'
 
 /**
  * Quirks with using module.exports, when modules circularly depend on each other.
@@ -25,16 +29,16 @@ Object.assign(module.exports,
      * @param (inputData) inputData - JSON object data that will be used to create JSON file.
      * @param (fileOutputPath)
      */
-    writeJsonToFile: async function writeJsonToFile(inputData, fileOutputPath) {      
+    writeJsonToFile: async function writeJsonToFile(fileOutputPath, inputData) {      
       /** convert JSON object to string & pretty-print */
       const data = JSON.stringify(inputData, null, 4);
       
       /** write JSON string to a file */
-      fs.writeFile('./outputFiles/outputData.json', data, (err) => {
+      fs.writeFile(path.join(__dirname, fileOutputPath), data, (err) => {
           if (err) {
               throw err;
           }
-          console.log("JSON data is saved.");
+          console.log("JSON data saved to local file.");
       });
     },
     /**
@@ -44,7 +48,7 @@ Object.assign(module.exports,
     readFromJsonFile: async function readFromJsonFile(fileInputPath){
 
       /** read JSON object from file */
-      fs.readFile('./outputFiles/outputData.json', 'utf-8', (err, data) => {
+      fs.readFile(path.join(__dirname, fileInputPath), 'utf-8', (err, data) => {
         if (err) {
             throw err;
         }

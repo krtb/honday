@@ -37,14 +37,20 @@ Object.assign(module.exports, {
         }
       }`;
 
-      function createLocalInputFile(response, localInputFileCreationPath, writeJsonToFile) {
-        let justNames = [];
+      /**
+       * Store response data as local JSON file. 
+       * @param {*} response - API response with data objects
+       * @param {*} localInputFileCreationPath - input file path, defined via global variable.
+       * @function writeJsonToFile - Utility function which performs data transformation.
+       */
+      function createLocalInputFile(localInputFileCreationPath, response, writeJsonToFile) {
+        let items = [];
 
         response.data.data.boards[0].items.forEach(anItem => {
-          justNames.push(anItem.name)
+          items.push(anItem)
         })
 
-        writeJsonToFile(justNames);
+        writeJsonToFile(localInputFileCreationPath, items);
       }
 
       await axios.post(axiosURL,{query: readBoardItemsID}, axiosConfig)
@@ -53,7 +59,7 @@ Object.assign(module.exports, {
         if (response.data.data.boards) {
           
           /** Comment in to create local JSON file of requested data. */
-          // createLocalInputFile(response, localInputFileCreationPath, writeJsonToFile)
+          // createLocalInputFile(localInputFileCreationPath, response, writeJsonToFile)
 
           res.locals.totalItemIdsCount = response.data.data.boards[0].items.length
           res.locals.itemIds = response.data.data.boards[0].items

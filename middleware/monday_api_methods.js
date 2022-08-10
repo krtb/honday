@@ -3,6 +3,7 @@ const _ = require('lodash');
 
 const { avoidTimeout } = require('../utils/avoidTimeout.js');
 const { writeJsonToFile, readFromJsonFile } = require('../utils/readWriteJSON.js');
+const localInputFileCreationPath = '../inputFiles/inputData.json';
 const test_json_file = require('../inputFiles/inputData.json');
 
 /** Global Variables */
@@ -36,28 +37,28 @@ Object.assign(module.exports, {
         }
       }`;
 
-      // TODO: Remove this after pushing changes.
-      let containAllItemsAndColumns = []
+      function createLocalInputFile(response, localInputFileCreationPath, writeJsonToFile) {
+        let justNames = [];
+
+        response.data.data.boards[0].items.forEach(anItem => {
+          justNames.push(anItem.name)
+        })
+
+        writeJsonToFile(justNames);
+      }
 
       await axios.post(axiosURL,{query: readBoardItemsID}, axiosConfig)
 
       .then((response)=>{
         if (response.data.data.boards) {
-          // containAllItemsAndColumns.push(response.data.data.boards[0].items)
           
+          /** Comment in to create local JSON file of requested data. */
+          // createLocalInputFile(response, localInputFileCreationPath, writeJsonToFile)
+
           res.locals.totalItemIdsCount = response.data.data.boards[0].items.length
           res.locals.itemIds = response.data.data.boards[0].items
-
-          // TODO: Remove this.
-          let justNames = [];
-          
-          response.data.data.boards[0].items.forEach(anItem => {
-            justNames.push(anItem.name)
-          })
-
-          writeJsonToFile(justNames);
-
           console.log(`READ ${res.locals.totalItemIdsCount} items and item columns.`);
+
         } else {
           console.error('malformed_query')
           console.error(response.data.errors)

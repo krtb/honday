@@ -5,6 +5,7 @@ const { avoidTimeout } = require('../utils/avoidTimeout.js');
 const { writeJsonToFile, readFromJsonFile } = require('../utils/readWriteJSON.js');
 const localInputFileCreationPath = '../inputFiles/inputData.json';
 const test_json_file = require('../inputFiles/inputData.json');
+const resultOutputPath = '../outputFiles/outData3.json';
 
 /** Global Variables */
 let mondayBoardID = process.env.MONDAY_TRS_BOARD_ID;
@@ -229,11 +230,15 @@ Object.assign(module.exports, {
       
       function parseOnSepcifiedStringCharacter(arrayofStrings) {
         let mycounter = [];
-        arrayofStrings.forEach((aString)=> {
-          let onlyCheckForFirstCharacter = aString.split('')[0];
+
+        arrayofStrings.forEach((itemIdAndName)=> {
+
+          let onlyCheckForFirstCharacter = itemIdAndName.name.split('')[0];
+
           if (onlyCheckForFirstCharacter === '(' ) {
-            mycounter.push(aString)
+            mycounter.push(itemIdAndName)
           }
+
         })
         return mycounter
       }
@@ -241,21 +246,51 @@ Object.assign(module.exports, {
       let myProjectsToEdit = parseOnSepcifiedStringCharacter(test_json_file)
 
       function reverseString(arrayOfStrings) {
+
         let myMap = arrayOfStrings.map((aProjectItem)=>{
-          let paranAndPSNumber = aProjectItem.split(')');
-          let mergedParans = paranAndPSNumber[0] + ")";
-          let projectName = paranAndPSNumber[1]
-          let nameSpaceRemoved = projectName.split('').splice(1,projectName.length).join('')
-          let reversedProjectTRSItem = nameSpaceRemoved + " " + mergedParans
-          return reversedProjectTRSItem
+
+          let myPsCodeCharacters = [];
+
+          //TODO: uncomment if using.
+          aProjectItem.name.split('').find((aCharacter)=> {
+            if(aCharacter === ')'){
+              return true
+            } else {
+              myPsCodeCharacters.push(aCharacter)
+            }
+            return false
+          });
+
+          let onlyPSCode = myPsCodeCharacters.join('') + ')';
+
+          let splitTitleArray = aProjectItem.name.split(' ')
+
+          splitTitleArray.find((aCharacter)=>{
+            if(aCharacter === ')'){
+              return true
+            } else {
+              myPsCodeCharacters.push(aCharacter)
+            }
+            return false
+          })
+          
+          //.slice(0,2).join(' ') + ' )'
+          let onlTitle = aProjectItem.name.split(' ').slice(3, aProjectItem.length).join(' ')
+          
+          let reversedProjectTitle = onlTitle + " " + onlyPSCode
+          // let nameSpaceRemoved = projectName.split('').splice(1,projectName.length).join('')
+          // let reversedProjectTRSItem = nameSpaceRemoved + " " + mergedParans
+          let myNewObj = {id: aProjectItem.id, name:reversedProjectTitle}
+          return myNewObj
         })
+
         return myMap
       }
 
-      let testingThis = reverseString(myProjectsToEdit)
+      let myTransformedData = reverseString(myProjectsToEdit)
       // console.log(testingThis, `<--- logging my test case here: testingThis ---`);
       
-      writeJsonToFile(testingThis)
+      writeJsonToFile(resultOutputPath, myTransformedData)
 
       // console.log(testingThis, `<--- logging my test case here: testingThis ---`);
 

@@ -8,18 +8,7 @@
 * [Usage](#usage)
 * [Technologies](#technologies)
 
-## General Information
-* Honday, [Harvest](https://help.getharvest.com/api-v2/) + [Monday](https://api.developer.monday.com/docs), is a backend application.
-  * Requests data from Harvest
-  * Maps data to GraphQL values required by Monday.com
-  * Sends data to project boards, in Monday.com
-* The purpose is to facilitate the inputting of project tracking information into multiple sources.
-* By doing so, our management team will 
-  * have increased available time
-  * be less error prone 
-  * can further develop this application to automate additional actions
-
-## Installation
+## Install
 * Check package.json to validate which is the minimal version of Node required.
 * Access necessary secrets, required by .env.example
 * Setup local .env file with your credentials

@@ -13,6 +13,11 @@ const {
   getItemsEditItemName,
 } = require('./middleware/monday_api_methods');
 
+const {
+	getItemsFromGroup,
+	getAllProjectsFromRollupBoard
+} = require('./middleware/mForecastAutomation');
+
 const { 
   mapCsvToData,
   compareHarvestCSVAndProjectTRSBoard,
@@ -28,7 +33,10 @@ const {
 
 /** READ Actions */
 // app.use(boardItemIdsTotalCount);
-app.use(boardOwnerColumnData);
+// app.use(boardOwnerColumnData);
+//===========
+// app.use(getItemsFromGroup);
+app.use(getAllProjectsFromRollupBoard);
 
 /** EDIT Actions */
 // app.use(getItemsEditItemName);

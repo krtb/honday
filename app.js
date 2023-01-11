@@ -15,7 +15,8 @@ const {
 
 const {
 	getItemsFromGroup,
-	assignedProjectPSCodes
+	assignedProjectPSCodes,
+	projectBudgetInfo
 } = require('./middleware/mForecastAutomation');
 
 const { 
@@ -35,8 +36,8 @@ const {
 // app.use(boardItemIdsTotalCount);
 // app.use(boardOwnerColumnData);
 //===========
-// app.use(getItemsFromGroup);
 app.use(assignedProjectPSCodes);
+app.use(projectBudgetInfo);
 
 /** EDIT Actions */
 // app.use(getItemsEditItemName);

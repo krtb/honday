@@ -78,10 +78,12 @@ Object.assign(module.exports, {
         console.error(err, `status_code: ${res.statusCode}`);
       });
 			
-			assignedProjectCodes
+			res.locals.assignedProjectCodes = assignedProjectCodes
 
       next();
     }
   },
-
+	projectBudgetInfo: async(req,res,next)=>{
+		let assignedProjectCodes = res.locals.assignedProjectCodes
+	}
 });

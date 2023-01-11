@@ -27,11 +27,11 @@ const {
 // app.use(postMondayItems);
 
 /** READ Actions */
-// app.use(boardItemIdsTotalCount); //TODO: using
-// app.use(boardOwnerColumnData);
+// app.use(boardItemIdsTotalCount);
+app.use(boardOwnerColumnData);
 
 /** EDIT Actions */
-app.use(getItemsEditItemName); //TODO: using
+// app.use(getItemsEditItemName);
 
 /** DELETE Actions */
 // app.use(deleteBoardItems);

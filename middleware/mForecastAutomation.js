@@ -8,7 +8,7 @@ const test_json_file = require('../inputFiles/inputData.json');
 const resultOutputPath = '../outputFiles/outData3.json';
 
 /** Global Variables */
-let mondayBoardID = process.env.PROEJCT_ROLLUP_BOARD;
+let mondayBoardID = process.env.MONDAY_TRS_BOARD_ID;
 // MONDAY_DEV_BOARD_ID;
 let arrayOfProjectTrsBoardObjects;
 
@@ -20,6 +20,15 @@ const axiosConfig = {
     'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
   },
 };
+
+// 1 - pull data from board with projects
+
+// 2 - then find a specific column - with name - total project hours
+// 3 - next, save other collumns, such as Project Start Date, Project End Date, consultant hrs, project manager hours, Budget
+// 4 - Divide budget, 80/20, by pm and consultant
+// 5 - create a new table
+// 6 - populate ever column with hours
+// 7 - figure out how to have it autorun - should as long as final function call is ok.
 
 Object.assign(module.exports, {
   /**
@@ -287,8 +296,7 @@ Object.assign(module.exports, {
         return myMap
       }
 
-      let myTransformedData = reverseString(myProjectsToEdit)
-      
+      let myTransformedData = reverseString(myProjectsToEdit)      
       writeJsonToFile(resultOutputPath, myTransformedData)
     }
   },

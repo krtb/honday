@@ -38,7 +38,7 @@ Object.assign(module.exports, {
    * @async
    * @function next From Express Router, allows Server to move on to next route.
    */
-  getAllProjectsFromRollupBoard: async (req, res, next)=>{
+  assignedProjectPSCodes: async (req, res, next)=>{
     {
       let query = `{
         boards (ids: ${mondayBoardID}) {
@@ -83,4 +83,5 @@ Object.assign(module.exports, {
       next();
     }
   },
+
 });

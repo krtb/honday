@@ -15,7 +15,7 @@ const {
 
 const {
 	getItemsFromGroup,
-	getAllProjectsFromRollupBoard
+	assignedProjectPSCodes
 } = require('./middleware/mForecastAutomation');
 
 const { 
@@ -36,7 +36,7 @@ const {
 // app.use(boardOwnerColumnData);
 //===========
 // app.use(getItemsFromGroup);
-app.use(getAllProjectsFromRollupBoard);
+app.use(assignedProjectPSCodes);
 
 /** EDIT Actions */
 // app.use(getItemsEditItemName);

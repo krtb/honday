@@ -125,14 +125,10 @@ productCodeAndTotalHoursCalc: async ()=>{
 	if(projectRollUpBoardResponse.data.errors === undefined){
 	const onlyProjectData = projectRollUpBoardResponse.data.data.boards[0].items;
 	
-	function getTotalAmountOfDays(stringWithBothDates){
-		console.log(stringWithBothDates)
-		let projectDateObj = JSON.parse(stringWithBothDates);
-		let startDateString = projectDateObj.from;
-		let endDateString = projectDateObj.to;
+	function getTotalAmountOfDays(startDateString, endDateString){
+		// To calculate the time difference of two dates
 		let startDate = new Date(`${startDateString}`);
 		let endDate = new Date(`${endDateString}`);
-		// To calculate the time difference of two dates
 		let differenceInTime = endDate.getTime() - startDate.getTime();
 		// To calculate the no. of days between two dates
 		let Difference_In_Days = differenceInTime / (1000 * 3600 * 24);
@@ -142,7 +138,10 @@ productCodeAndTotalHoursCalc: async ()=>{
 				let projectManagerName = typeof anItem.column_values[12].value
 				if(anItem.group.title === "Assigned" 
 				&& projectManagerName === "string"){
-					let totalProjectDays = getTotalAmountOfDays(anItem.column_values[28].value);
+					let projectDateObj = JSON.parse(anItem.column_values[28].value);
+					let startDateString = projectDateObj.from;
+					let endDateString = projectDateObj.to;
+					let totalProjectDays = getTotalAmountOfDays(startDateString, endDateString);
 
 					let primaryProjectInfoSet = {
 						monday_id: anItem.id,
@@ -156,7 +155,9 @@ productCodeAndTotalHoursCalc: async ()=>{
 						consultant_name:  anItem.column_values[14].value,
 						strategic_consultant_profile: anItem.column_values[15].value,
 						strategic_consultant_name: anItem.column_values[16].value,
-						current_timeline_date: totalProjectDays,
+						current_start_date: startDateString,
+						current_end_date: endDateString,
+						current_timeline_days: totalProjectDays,
 						contract_start_date: anItem.column_values[24].text,
 						contract_end_date_og: anItem.column_values[26].value,
 						group_type: anItem.group.title

@@ -9,6 +9,7 @@ const resultOutputPath = '../outputFiles/outData3.json';
 
 /** Global Variables */
 let mondayBoardID = process.env.PROJECT_ROLLUP_BOARD;
+let projectTrsBoard = process.env.PROJECT_TRS_BOARD;
 // MONDAY_DEV_BOARD_ID;
 let arrayOfProjectTrsBoardObjects;
 
@@ -82,8 +83,142 @@ Object.assign(module.exports, {
 
       next();
     }
-  },
-	projectBudgetInfo: async(req,res,next)=>{
-		let assignedProjectCodes = res.locals.assignedProjectCodes
+},
+rollUpBoardNewAndAssignedGroups: async ()=>{
+	let query = `{
+		boards (ids: ${mondayBoardID}) 
+		{ groups (ids: status)
+			{ title color position }
+		}
+	}`;
+
+	const myGroups = await axios.post(axiosURL, {query}, axiosConfig)
+		.then(resp => {
+			return resp
+		})
+	console.log(myGroups)
+},
+productCodeAndTotalHoursCalc: async ()=>{
+//Get all items from Monday Project Rollup board
+
+	let query = `{ boards(ids: ${mondayBoardID}) { groups { id title } items(limit: 100) { id name column_values{id title value text} group {title}  } } }`;
+
+	const arrayOfProductCodes = []; 
+	const projectRollUpBoardResponse = await axios.post(axiosURL,{query}, axiosConfig).then(resp => resp)
+	.catch(function (error) {
+		if (error.response) {
+		  // Request made and server responded
+			console.log(error.response.data);
+			console.log(error.response.status);
+			console.log(error.response.headers);
+		} else if (error.request) {
+		  // The request was made but no response was received
+			console.log(error.request);
+		} else {
+		  // Something happened in setting up the request that triggered an Error
+			console.log('Error', error.message);
+		}
+	
+		})
+	
+	const arrayOfAssignedProjects = [];
+	if(projectRollUpBoardResponse.data.errors === undefined){
+	const onlyProjectData = projectRollUpBoardResponse.data.data.boards[0].items;
+	
+	function getTotalAmountOfDays(stringWithBothDates){
+		console.log(stringWithBothDates)
+		let projectDateObj = JSON.parse(stringWithBothDates);
+		let startDateString = projectDateObj.from;
+		let endDateString = projectDateObj.to;
+		let startDate = new Date(`${startDateString}`);
+		let endDate = new Date(`${endDateString}`);
+		// To calculate the time difference of two dates
+		let differenceInTime = endDate.getTime() - startDate.getTime();
+		// To calculate the no. of days between two dates
+		let Difference_In_Days = differenceInTime / (1000 * 3600 * 24);
+		return Difference_In_Days
 	}
+	onlyProjectData.forEach((anItem)=>{
+				let projectManagerName = typeof anItem.column_values[12].value
+				if(anItem.group.title === "Assigned" 
+				&& projectManagerName === "string"){
+					let totalProjectDays = getTotalAmountOfDays(anItem.column_values[28].value);
+
+					let primaryProjectInfoSet = {
+						monday_id: anItem.id,
+						project_name: anItem.name,
+						product_code: anItem.column_values[1].text,
+						ps_number: anItem.column_values[2].text,
+						project_status: anItem.column_values[6].text,
+						project_manager_profile: anItem.column_values[11].value,
+						project_manager_name: anItem.column_values[12].value,
+						consultant_profile: anItem.column_values[13].value,
+						consultant_name:  anItem.column_values[14].value,
+						strategic_consultant_profile: anItem.column_values[15].value,
+						strategic_consultant_name: anItem.column_values[16].value,
+						current_timeline_date: totalProjectDays,
+						contract_start_date: anItem.column_values[24].text,
+						contract_end_date_og: anItem.column_values[26].value,
+						group_type: anItem.group.title
+					}
+					arrayOfAssignedProjects.push(primaryProjectInfoSet)
+				}
+
+	});
+	console.log(arrayOfAssignedProjects, `<--- logging my test case here: arrayOfAssignedProjects ---`);
+	} else {
+	console.log(`Error found: ${projectRollUpBoardResponse.data.errors.message}`)
+	}
+},
+	// projectTrsProjectInfo: async(req,res,next)=>{
+	// 	let assignedProjectCodes = res.locals.assignedProjectCodes
+	// 	// Get all projects from TRS board
+	// 	// filter based on PS code, with ps removed
+	// 	// create object of information
+
+	// 	let query = `{
+	// 		boards (ids: ${projectTrsBoard}) {
+	// 			items (limit: 100) {
+	// 				id
+	// 				name
+	// 				column_values {
+	// 					id
+	// 					title
+	// 					value
+	// 					text
+	// 					description
+	// 					additional_info
+	// 				}
+	// 			}
+	// 		}
+	// 	}`;
+
+	// 	// getAll Boards, that have been moved into "Assigned"
+	// 	// find and return project ps codes, to be used against ProjectTRS table.
+	// 	let projectsWithBudgetInfo = []
+
+	// 	await axios.post(axiosURL,{query}, axiosConfig)
+	// 	.then((response)=>{
+	// 		console.log(response, '<--- my response');
+	// 		// if (response.data.data.boards) {
+	// 		// 	response.data.data.boards[0].items.map((aBoardItem)=>{
+	// 		// 		let assignedStatusColumn = aBoardItem.column_values[50].text
+	// 		// 		if(assignedStatusColumn !== null || ''){
+	// 		// 			let psProjectNumber = aBoardItem.column_values[2].text;
+	// 		// 			projectsWithBudgetInfo.push(psProjectNumber)
+	// 		// 		}
+	// 		// 	})
+	// 		// } else {
+	// 		// 	console.error('malformed_query');
+	// 		// 	console.error(response.data.errors);
+	// 		// }
+	// 	})
+	// 	.catch((err)=> {
+	// 		console.error('server_response');
+	// 		console.error(err, `status_code: ${res.statusCode}`);
+	// 	});
+		
+	// 	res.locals.assignedProjectCodes = assignedProjectCodes
+	// 	next();
+	// },
 });

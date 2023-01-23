@@ -134,6 +134,9 @@ productCodeAndTotalHoursCalc: async ()=>{
 		let Difference_In_Days = differenceInTime / (1000 * 3600 * 24);
 		return Difference_In_Days
 	}
+	function productCodeSwtich(){
+		
+	}
 	onlyProjectData.forEach((anItem)=>{
 				let projectManagerName = typeof anItem.column_values[12].value
 				if(anItem.group.title === "Assigned" 

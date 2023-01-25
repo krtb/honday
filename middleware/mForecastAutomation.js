@@ -134,8 +134,270 @@ productCodeAndTotalHoursCalc: async ()=>{
 		let Difference_In_Days = differenceInTime / (1000 * 3600 * 24);
 		return Difference_In_Days
 	}
-	function productCodeSwtich(){
-		
+
+	"STRT-UP-PENDO",2,
+	"PNDO-WRKSHP-SER",4,
+	"P-QS-STD",16,
+	"P-QS-PLUS",32,
+	"P-QS-PRM",60,
+	"P-ENT-IMPL-S",106,
+	"P-ENT-IMPL-M",215,
+	"P-ENT-IMPL-L",386,
+	"10-FTE-3-MNTH",48,
+	"20-FTE-3-MNTH",96,
+	"30-FTE-3-MNTH",144,
+	"10-FTE-6-MNTH",96,
+	"20-FTE-6-MNTH",192,
+	"30-FTE-6-MNTH",288,
+	"PS-ACCELERATOR",3,
+	"PS-FB-QS-W",3,
+	"PS-G-QS-W",3,
+	"PS-I-QS-W",3,
+	"PS-PFSU-PLUS-QS-W",10,
+	"PS-QS-PFSU-PLUS-M",10,
+	"PS-PFSU-QS-W",2,
+	"PS-PRO-QS-W",22,
+	"PS-PRO-QS-M",22,
+	"PS-PRO-SERV-ACCLTR",5,
+	"PS-QS-M",5,
+	"PS-QS-PFSU-M",2,
+	"PS-TM-QS-M",10,
+	"PS-TM-QS-W",10,
+	"PS-STRT-UP-PENDO",2,
+	"PS-PNDO-WRKSHP-SER",4,
+	"PS-QS-STD",16,
+	"PS-QS-PLUS",32,
+	"PS-QS-PRM",60,
+	"PS-ENT-IMPL-S",106,
+	"PS-ENT-IMPL-M",215,
+	"PS-ENT-IMPL-L",386,
+	"PS-10-FTE-3-MNTH",48,
+	"PS-20-FTE-3-MNTH",96,
+	"PS-30-FTE-3-MNTH",144,
+	"PS-10-FTE-6-MNTH",96,
+	"PS-20-FTE-6-MNTH",192,
+	"PS-30-FTE-6-MNTH",288,
+	"PS-ACCELERATOR",3,
+	"PS-FB-QS-W",3,
+	"PS-G-QS-W",3,
+	"PS-I-QS-W",3,
+	"PS-PFSU-PLUS-QS-W",10,
+	"PS-QS-PFSU-PLUS-M",10,
+	"PS-PFSU-QS-W",2,
+	"PS-PRO-QS-W",22,
+	"PS-PRO-QS-M",22,
+	"PS-PRO-SERV-ACCLTR",5,
+	"PS-QS-M",5,
+	"PS-QS-PFSU-M",2,
+	"PS-TM-QS-M",10,
+	"PS-TM-QS-W",10,
+	"PS-P-DA-L",120,
+	"PS-P-DA-M",80,
+	"PS-P-DA-S",40,
+	{Qty}
+	
+	function productCodeSwtich(productCodeString){
+		let productCode = productCodeString;
+		let totalHours  = "No Hour Code Found";
+
+		// TODO: After setting up how switch will go, replace with array values
+		// THEN work on GETTING information from data out target
+		switch (productCode) {
+			case "STRT-UP-PENDO":
+				totalHours = 2;
+				break;
+			case "PNDO-WRKSHP-SER":
+				totalHours = 4;
+				break;
+			case "P-QS-STD":
+				totalHours = 16;
+				break;
+			case "P-QS-PLUS":
+				totalHours = 4;
+				break;
+			case "P-QS-PLUS":
+				totalHours = 32;
+				break;
+			case "P-QS-PRM":
+				totalHours = 60;
+				break;
+			case "P-ENT-IMPL-S":
+				totalHours = 106;
+				break;	
+			case "P-ENT-IMPL-M":
+				totalHours = 215;
+				break;
+			case "P-ENT-IMPL-M":
+				totalHours = 386;
+				break;
+			case "10-FTE-3-MNTH":
+				totalHours = 48;
+				break;
+			case "20-FTE-3-MNTH":
+				totalHours = 96;
+				break;
+			case "30-FTE-3-MNTH":
+				totalHours = 144;
+				break;
+			case "10-FTE-6-MNTH":
+				totalHours = 96;
+				break;
+			case "20-FTE-6-MNTH":
+				totalHours = 192;
+				break;
+			case "30-FTE-6-MNTH":
+				totalHours = 288;
+				break;
+			case "PS-ACCELERATOR":
+				totalHours = 3;
+				break;
+			case "PS-FB-QS-W":
+				totalHours = 3;
+				break;
+			case "PS-G-QS-W":
+				totalHours = 3;
+				break;
+			case "PS-I-QS-W":
+				totalHours = 3;
+				break;
+			case "PS-PFSU-PLUS-QS-W":
+				totalHours = 10;
+				break;
+			case "PS-QS-PFSU-PLUS-M":
+				totalHours = 10;
+				break;	
+			case "PS-PFSU-QS-W":
+				totalHours = 2;
+				break;
+			case "PS-PRO-QS-W":
+				totalHours = 22;
+				break;
+			case "PS-PRO-QS-M":
+				totalHours = 22;
+				break;
+			case "PS-QS-PFSU-M":
+				totalHours = 5;
+				break;
+			case "PS-PRO-SERV-ACCLTR":
+				totalHours = 5;
+				break;	
+			case "PS-QS-M":
+				totalHours = 5;
+				break;
+			case "PS-QS-PFSU-M":
+				totalHours = 2;
+				break;
+			case "PS-TM-QS-M":
+				totalHours = 10;
+				break;
+			case "PS-TM-QS-W":
+				totalHours = 10;
+				break;
+			case "PS-STRT-UP-PENDO":
+				totalHours = 2;
+				break;
+			case "PS-PNDO-WRKSHP-SER":
+				totalHours = 4;
+				break;
+			case "PS-QS-STD":
+				totalHours = 16;
+				break;
+			case "PS-QS-PLUS":
+				totalHours = 32;
+				break;
+			case "PS-QS-PLUS":
+				totalHours = 32;
+				break;
+			case "PS-QS-PRM":
+				totalHours = 60;
+				break;
+			case "PS-ENT-IMPL-S":
+				totalHours = 106;
+				break;
+			case "PS-ENT-IMPL-M":
+				totalHours = 215;
+				break;
+			case "PS-ENT-IMPL-L":
+				totalHours = 386;
+				break;
+			case "PS-ENT-IMPL-L":
+				totalHours = 386;
+				break;
+			case "PS-10-FTE-3-MNTH":
+				totalHours = 48;
+				break;
+			case "PS-20-FTE-3-MNTH":
+				totalHours = 96;
+				break;
+			case "PS-30-FTE-3-MNTH":
+				totalHours = 96;
+				break;
+			case "PS-30-FTE-3-MNTH":
+				totalHours = 144;
+				break;
+			case "PS-10-FTE-6-MNTH":
+				totalHours = 96;
+				break;
+			case "PS-20-FTE-6-MNTH":
+				totalHours = 192;
+				break;
+			case "PS-30-FTE-6-MNTH":
+				totalHours = 288;
+				break;
+			case "PS-ACCELERATOR":
+				totalHours = 3;
+				break;
+			case "PS-FB-QS-W":
+				totalHours = 3;
+				break;
+			case "PS-G-QS-W":
+				totalHours = 3;
+				break;
+			case "PS-I-QS-W":
+				totalHours = 3;
+				break;
+			case "PS-PFSU-PLUS-QS-W":
+				totalHours = 10;
+				break;
+			case "PS-QS-PFSU-PLUS-M":
+				totalHours = 10;
+				break;
+			case "PS-PFSU-QS-W":
+				totalHours = 2;
+				break;
+			case "PS-PRO-QS-W":
+				totalHours = 22;
+				break;
+			case "PS-PRO-QS-M":
+				totalHours = 22;
+				break;
+			case "PS-PRO-SERV-ACCLTR":
+				totalHours = 5;
+				break;
+			case "PS-QS-M":
+				totalHours = 5;
+				break;
+			case "PS-QS-PFSU-M":
+				totalHours = 2;
+				break;
+			case "PS-TM-QS-M":
+				totalHours = 10;
+				break;
+			case "PS-TM-QS-W":
+				totalHours = 10;
+				break;
+			case "PS-P-DA-L":
+				totalHours = 120;
+				break;
+			case "PS-P-DA-M":
+				totalHours = 80;
+				break;
+			case "PS-P-DA-M":
+				totalHours = 40;
+				break;
+			default:
+				break;
+		}
 	}
 	onlyProjectData.forEach((anItem)=>{
 				let projectManagerName = typeof anItem.column_values[12].value
@@ -149,7 +411,7 @@ productCodeAndTotalHoursCalc: async ()=>{
 					let primaryProjectInfoSet = {
 						monday_id: anItem.id,
 						project_name: anItem.name,
-						product_code: anItem.column_values[1].text,
+						product_code: productCodeSwtich(anItem.column_values[1].text),
 						ps_number: anItem.column_values[2].text,
 						project_status: anItem.column_values[6].text,
 						project_manager_profile: anItem.column_values[11].value,

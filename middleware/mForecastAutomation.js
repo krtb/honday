@@ -134,67 +134,6 @@ productCodeAndTotalHoursCalc: async ()=>{
 		let Difference_In_Days = differenceInTime / (1000 * 3600 * 24);
 		return Difference_In_Days
 	}
-
-	"STRT-UP-PENDO",2,
-	"PNDO-WRKSHP-SER",4,
-	"P-QS-STD",16,
-	"P-QS-PLUS",32,
-	"P-QS-PRM",60,
-	"P-ENT-IMPL-S",106,
-	"P-ENT-IMPL-M",215,
-	"P-ENT-IMPL-L",386,
-	"10-FTE-3-MNTH",48,
-	"20-FTE-3-MNTH",96,
-	"30-FTE-3-MNTH",144,
-	"10-FTE-6-MNTH",96,
-	"20-FTE-6-MNTH",192,
-	"30-FTE-6-MNTH",288,
-	"PS-ACCELERATOR",3,
-	"PS-FB-QS-W",3,
-	"PS-G-QS-W",3,
-	"PS-I-QS-W",3,
-	"PS-PFSU-PLUS-QS-W",10,
-	"PS-QS-PFSU-PLUS-M",10,
-	"PS-PFSU-QS-W",2,
-	"PS-PRO-QS-W",22,
-	"PS-PRO-QS-M",22,
-	"PS-PRO-SERV-ACCLTR",5,
-	"PS-QS-M",5,
-	"PS-QS-PFSU-M",2,
-	"PS-TM-QS-M",10,
-	"PS-TM-QS-W",10,
-	"PS-STRT-UP-PENDO",2,
-	"PS-PNDO-WRKSHP-SER",4,
-	"PS-QS-STD",16,
-	"PS-QS-PLUS",32,
-	"PS-QS-PRM",60,
-	"PS-ENT-IMPL-S",106,
-	"PS-ENT-IMPL-M",215,
-	"PS-ENT-IMPL-L",386,
-	"PS-10-FTE-3-MNTH",48,
-	"PS-20-FTE-3-MNTH",96,
-	"PS-30-FTE-3-MNTH",144,
-	"PS-10-FTE-6-MNTH",96,
-	"PS-20-FTE-6-MNTH",192,
-	"PS-30-FTE-6-MNTH",288,
-	"PS-ACCELERATOR",3,
-	"PS-FB-QS-W",3,
-	"PS-G-QS-W",3,
-	"PS-I-QS-W",3,
-	"PS-PFSU-PLUS-QS-W",10,
-	"PS-QS-PFSU-PLUS-M",10,
-	"PS-PFSU-QS-W",2,
-	"PS-PRO-QS-W",22,
-	"PS-PRO-QS-M",22,
-	"PS-PRO-SERV-ACCLTR",5,
-	"PS-QS-M",5,
-	"PS-QS-PFSU-M",2,
-	"PS-TM-QS-M",10,
-	"PS-TM-QS-W",10,
-	"PS-P-DA-L",120,
-	"PS-P-DA-M",80,
-	"PS-P-DA-S",40,
-	{Qty}
 	
 	function productCodeSwtich(productCodeString){
 		let productCode = productCodeString;
@@ -213,9 +152,6 @@ productCodeAndTotalHoursCalc: async ()=>{
 				totalHours = 16;
 				break;
 			case "P-QS-PLUS":
-				totalHours = 4;
-				break;
-			case "P-QS-PLUS":
 				totalHours = 32;
 				break;
 			case "P-QS-PRM":
@@ -223,11 +159,11 @@ productCodeAndTotalHoursCalc: async ()=>{
 				break;
 			case "P-ENT-IMPL-S":
 				totalHours = 106;
-				break;	
+				break;
 			case "P-ENT-IMPL-M":
 				totalHours = 215;
 				break;
-			case "P-ENT-IMPL-M":
+			case "P-ENT-IMPL-L":
 				totalHours = 386;
 				break;
 			case "10-FTE-3-MNTH":
@@ -305,9 +241,6 @@ productCodeAndTotalHoursCalc: async ()=>{
 			case "PS-QS-PLUS":
 				totalHours = 32;
 				break;
-			case "PS-QS-PLUS":
-				totalHours = 32;
-				break;
 			case "PS-QS-PRM":
 				totalHours = 60;
 				break;
@@ -320,16 +253,10 @@ productCodeAndTotalHoursCalc: async ()=>{
 			case "PS-ENT-IMPL-L":
 				totalHours = 386;
 				break;
-			case "PS-ENT-IMPL-L":
-				totalHours = 386;
-				break;
 			case "PS-10-FTE-3-MNTH":
 				totalHours = 48;
 				break;
 			case "PS-20-FTE-3-MNTH":
-				totalHours = 96;
-				break;
-			case "PS-30-FTE-3-MNTH":
 				totalHours = 96;
 				break;
 			case "PS-30-FTE-3-MNTH":

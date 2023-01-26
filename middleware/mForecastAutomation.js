@@ -99,7 +99,7 @@ rollUpBoardNewAndAssignedGroups: async ()=>{
 		})
 	console.log(myGroups)
 },
-projectAndProductCodeBuilder: async ()=>{
+projectAndProductCodeBuilder: async (req, res, next)=>{
 //Get all items from Monday Project Rollup board
 
 	let query = `{ boards(ids: ${mondayBoardID}) { groups { id title } items(limit: 100) { id name column_values{id title value text} group {title}  } } }`;
@@ -179,12 +179,19 @@ projectAndProductCodeBuilder: async ()=>{
 	});
 	res.locals.arrayOfAssignedProjects = arrayOfAssignedProjects
 	console.log(`Assigned projects collected.`);
+	next()
 	} else {
 	console.log(`Error found: ${projectRollUpBoardResponse.data.errors.message}`)
 	}
 },
 	forecastGenerator: async(req,res,next)=>{
-		let assignedProjectCodes = res.locals.assignedProjectCodes
-		console.log(assignedProjectCodes, `<--- logging my test case here: assignedProjectCodes ---`);
+		let arrayOfAssignedProjects = res.locals.arrayOfAssignedProjects
+		//TODO: 
+		// 1 - build GraphQL request to CREATE item in Monday
+		// 2 - Loop over array of projects to send
+		// 3 - Test creating 1 forecast item
+		// 4 - Create DELETION Request, for cases where items need to be deleted in  bulk
+
+
 	},
 });

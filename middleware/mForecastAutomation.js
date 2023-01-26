@@ -104,7 +104,6 @@ productCodeAndTotalHoursCalc: async ()=>{
 
 	let query = `{ boards(ids: ${mondayBoardID}) { groups { id title } items(limit: 100) { id name column_values{id title value text} group {title}  } } }`;
 
-	const arrayOfProductCodes = []; 
 	const projectRollUpBoardResponse = await axios.post(axiosURL,{query}, axiosConfig).then(resp => resp)
 	.catch(function (error) {
 		if (error.response) {
@@ -178,7 +177,8 @@ productCodeAndTotalHoursCalc: async ()=>{
 				}
 
 	});
-	console.log(arrayOfAssignedProjects, `<--- logging my test case here: arrayOfAssignedProjects ---`);
+	res.locals.arrayOfAssignedProjects = arrayOfAssignedProjects
+	console.log(`Assigned projects collected.`);
 	} else {
 	console.log(`Error found: ${projectRollUpBoardResponse.data.errors.message}`)
 	}

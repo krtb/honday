@@ -15,7 +15,8 @@ const {
 
 const {
 	assignedProjectPSCodes,
-  productCodeAndTotalHoursCalc,
+  projectAndProductCodeBuilder,
+  forecastGenerator,
   rollUpBoardNewAndAssignedGroups
 } = require('./middleware/mForecastAutomation');
 
@@ -38,7 +39,8 @@ const {
 //===========
 // app.use(assignedProjectPSCodes);
 // app.use(rollUpBoardNewAndAssignedGroups);
-app.use(productCodeAndTotalHoursCalc);
+app.use(projectAndProductCodeBuilder);
+app.use(forecastGenerator);
 /** EDIT Actions */
 // app.use(getItemsEditItemName);
 

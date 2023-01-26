@@ -99,7 +99,7 @@ rollUpBoardNewAndAssignedGroups: async ()=>{
 		})
 	console.log(myGroups)
 },
-productCodeAndTotalHoursCalc: async ()=>{
+projectAndProductCodeBuilder: async ()=>{
 //Get all items from Monday Project Rollup board
 
 	let query = `{ boards(ids: ${mondayBoardID}) { groups { id title } items(limit: 100) { id name column_values{id title value text} group {title}  } } }`;
@@ -183,55 +183,8 @@ productCodeAndTotalHoursCalc: async ()=>{
 	console.log(`Error found: ${projectRollUpBoardResponse.data.errors.message}`)
 	}
 },
-	// projectTrsProjectInfo: async(req,res,next)=>{
-	// 	let assignedProjectCodes = res.locals.assignedProjectCodes
-	// 	// Get all projects from TRS board
-	// 	// filter based on PS code, with ps removed
-	// 	// create object of information
-
-	// 	let query = `{
-	// 		boards (ids: ${projectTrsBoard}) {
-	// 			items (limit: 100) {
-	// 				id
-	// 				name
-	// 				column_values {
-	// 					id
-	// 					title
-	// 					value
-	// 					text
-	// 					description
-	// 					additional_info
-	// 				}
-	// 			}
-	// 		}
-	// 	}`;
-
-	// 	// getAll Boards, that have been moved into "Assigned"
-	// 	// find and return project ps codes, to be used against ProjectTRS table.
-	// 	let projectsWithBudgetInfo = []
-
-	// 	await axios.post(axiosURL,{query}, axiosConfig)
-	// 	.then((response)=>{
-	// 		console.log(response, '<--- my response');
-	// 		// if (response.data.data.boards) {
-	// 		// 	response.data.data.boards[0].items.map((aBoardItem)=>{
-	// 		// 		let assignedStatusColumn = aBoardItem.column_values[50].text
-	// 		// 		if(assignedStatusColumn !== null || ''){
-	// 		// 			let psProjectNumber = aBoardItem.column_values[2].text;
-	// 		// 			projectsWithBudgetInfo.push(psProjectNumber)
-	// 		// 		}
-	// 		// 	})
-	// 		// } else {
-	// 		// 	console.error('malformed_query');
-	// 		// 	console.error(response.data.errors);
-	// 		// }
-	// 	})
-	// 	.catch((err)=> {
-	// 		console.error('server_response');
-	// 		console.error(err, `status_code: ${res.statusCode}`);
-	// 	});
-		
-	// 	res.locals.assignedProjectCodes = assignedProjectCodes
-	// 	next();
-	// },
+	forecastGenerator: async(req,res,next)=>{
+		let assignedProjectCodes = res.locals.assignedProjectCodes
+		console.log(assignedProjectCodes, `<--- logging my test case here: assignedProjectCodes ---`);
+	},
 });

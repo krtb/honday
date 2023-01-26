@@ -6,6 +6,7 @@ const { writeJsonToFile, readFromJsonFile } = require('../utils/readWriteJSON.js
 const localInputFileCreationPath = '../inputFiles/inputData.json';
 const test_json_file = require('../inputFiles/inputData.json');
 const resultOutputPath = '../outputFiles/outData3.json';
+const productCodesObj = require('../assets/2023-01-26_current_product_codes.json')
 
 /** Global Variables */
 let mondayBoardID = process.env.PROJECT_ROLLUP_BOARD;
@@ -135,195 +136,11 @@ productCodeAndTotalHoursCalc: async ()=>{
 		return Difference_In_Days
 	}
 	
-	function productCodeSwtich(productCodeString){
-		let productCode = productCodeString;
-		let totalHours  = "No Hour Code Found";
-
-		// TODO: After setting up how switch will go, replace with array values
-		// THEN work on GETTING information from data out target
-		switch (productCode) {
-			case "STRT-UP-PENDO":
-				totalHours = 2;
-				break;
-			case "PNDO-WRKSHP-SER":
-				totalHours = 4;
-				break;
-			case "P-QS-STD":
-				totalHours = 16;
-				break;
-			case "P-QS-PLUS":
-				totalHours = 32;
-				break;
-			case "P-QS-PRM":
-				totalHours = 60;
-				break;
-			case "P-ENT-IMPL-S":
-				totalHours = 106;
-				break;
-			case "P-ENT-IMPL-M":
-				totalHours = 215;
-				break;
-			case "P-ENT-IMPL-L":
-				totalHours = 386;
-				break;
-			case "10-FTE-3-MNTH":
-				totalHours = 48;
-				break;
-			case "20-FTE-3-MNTH":
-				totalHours = 96;
-				break;
-			case "30-FTE-3-MNTH":
-				totalHours = 144;
-				break;
-			case "10-FTE-6-MNTH":
-				totalHours = 96;
-				break;
-			case "20-FTE-6-MNTH":
-				totalHours = 192;
-				break;
-			case "30-FTE-6-MNTH":
-				totalHours = 288;
-				break;
-			case "PS-ACCELERATOR":
-				totalHours = 3;
-				break;
-			case "PS-FB-QS-W":
-				totalHours = 3;
-				break;
-			case "PS-G-QS-W":
-				totalHours = 3;
-				break;
-			case "PS-I-QS-W":
-				totalHours = 3;
-				break;
-			case "PS-PFSU-PLUS-QS-W":
-				totalHours = 10;
-				break;
-			case "PS-QS-PFSU-PLUS-M":
-				totalHours = 10;
-				break;	
-			case "PS-PFSU-QS-W":
-				totalHours = 2;
-				break;
-			case "PS-PRO-QS-W":
-				totalHours = 22;
-				break;
-			case "PS-PRO-QS-M":
-				totalHours = 22;
-				break;
-			case "PS-QS-PFSU-M":
-				totalHours = 5;
-				break;
-			case "PS-PRO-SERV-ACCLTR":
-				totalHours = 5;
-				break;	
-			case "PS-QS-M":
-				totalHours = 5;
-				break;
-			case "PS-QS-PFSU-M":
-				totalHours = 2;
-				break;
-			case "PS-TM-QS-M":
-				totalHours = 10;
-				break;
-			case "PS-TM-QS-W":
-				totalHours = 10;
-				break;
-			case "PS-STRT-UP-PENDO":
-				totalHours = 2;
-				break;
-			case "PS-PNDO-WRKSHP-SER":
-				totalHours = 4;
-				break;
-			case "PS-QS-STD":
-				totalHours = 16;
-				break;
-			case "PS-QS-PLUS":
-				totalHours = 32;
-				break;
-			case "PS-QS-PRM":
-				totalHours = 60;
-				break;
-			case "PS-ENT-IMPL-S":
-				totalHours = 106;
-				break;
-			case "PS-ENT-IMPL-M":
-				totalHours = 215;
-				break;
-			case "PS-ENT-IMPL-L":
-				totalHours = 386;
-				break;
-			case "PS-10-FTE-3-MNTH":
-				totalHours = 48;
-				break;
-			case "PS-20-FTE-3-MNTH":
-				totalHours = 96;
-				break;
-			case "PS-30-FTE-3-MNTH":
-				totalHours = 144;
-				break;
-			case "PS-10-FTE-6-MNTH":
-				totalHours = 96;
-				break;
-			case "PS-20-FTE-6-MNTH":
-				totalHours = 192;
-				break;
-			case "PS-30-FTE-6-MNTH":
-				totalHours = 288;
-				break;
-			case "PS-ACCELERATOR":
-				totalHours = 3;
-				break;
-			case "PS-FB-QS-W":
-				totalHours = 3;
-				break;
-			case "PS-G-QS-W":
-				totalHours = 3;
-				break;
-			case "PS-I-QS-W":
-				totalHours = 3;
-				break;
-			case "PS-PFSU-PLUS-QS-W":
-				totalHours = 10;
-				break;
-			case "PS-QS-PFSU-PLUS-M":
-				totalHours = 10;
-				break;
-			case "PS-PFSU-QS-W":
-				totalHours = 2;
-				break;
-			case "PS-PRO-QS-W":
-				totalHours = 22;
-				break;
-			case "PS-PRO-QS-M":
-				totalHours = 22;
-				break;
-			case "PS-PRO-SERV-ACCLTR":
-				totalHours = 5;
-				break;
-			case "PS-QS-M":
-				totalHours = 5;
-				break;
-			case "PS-QS-PFSU-M":
-				totalHours = 2;
-				break;
-			case "PS-TM-QS-M":
-				totalHours = 10;
-				break;
-			case "PS-TM-QS-W":
-				totalHours = 10;
-				break;
-			case "PS-P-DA-L":
-				totalHours = 120;
-				break;
-			case "PS-P-DA-M":
-				totalHours = 80;
-				break;
-			case "PS-P-DA-M":
-				totalHours = 40;
-				break;
-			default:
-				break;
+	function pcHoursFinder(productCodeString, productCodesObj){
+		let arrayOfCodes = Object.entries(productCodesObj);
+		let productCodeHour = arrayOfCodes.find((aProductCode)=> aProductCode[0] === productCodeString)
+		if(productCodeHour !== undefined || null){
+			return productCodeHour[1]
 		}
 	}
 	onlyProjectData.forEach((anItem)=>{
@@ -331,6 +148,7 @@ productCodeAndTotalHoursCalc: async ()=>{
 				if(anItem.group.title === "Assigned" 
 				&& projectManagerName === "string"){
 					let projectDateObj = JSON.parse(anItem.column_values[28].value);
+					let projectCodeText = anItem.column_values[1].text
 					let startDateString = projectDateObj.from;
 					let endDateString = projectDateObj.to;
 					let totalProjectDays = getTotalAmountOfDays(startDateString, endDateString);
@@ -338,15 +156,17 @@ productCodeAndTotalHoursCalc: async ()=>{
 					let primaryProjectInfoSet = {
 						monday_id: anItem.id,
 						project_name: anItem.name,
-						product_code: productCodeSwtich(anItem.column_values[1].text),
+						product_code: projectCodeText,
+						qty: Number(anItem.column_values[54].text),
+						total_product_hours: pcHoursFinder(projectCodeText, productCodesObj),
 						ps_number: anItem.column_values[2].text,
 						project_status: anItem.column_values[6].text,
 						project_manager_profile: anItem.column_values[11].value,
-						project_manager_name: anItem.column_values[12].value,
+						project_manager_name: anItem.column_values[12].text,
 						consultant_profile: anItem.column_values[13].value,
-						consultant_name:  anItem.column_values[14].value,
+						consultant_name:  anItem.column_values[14].text,
 						strategic_consultant_profile: anItem.column_values[15].value,
-						strategic_consultant_name: anItem.column_values[16].value,
+						strategic_consultant_name: anItem.column_values[16].text,
 						current_start_date: startDateString,
 						current_end_date: endDateString,
 						current_timeline_days: totalProjectDays,

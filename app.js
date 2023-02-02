@@ -16,8 +16,9 @@ const {
 const {
 	assignedProjectPSCodes,
   projectAndProductCodeBuilder,
+  createLinkConnectionProjectTRSBoard,
   forecastGenerator,
-  rollUpBoardNewAndAssignedGroups
+  rollUpBoardNewAndAssignedGroups,
 } = require('./middleware/mForecastAutomation');
 
 const { 
@@ -40,7 +41,8 @@ const {
 // app.use(assignedProjectPSCodes);
 // app.use(rollUpBoardNewAndAssignedGroups);
 app.use(projectAndProductCodeBuilder);
-app.use(forecastGenerator);
+app.use(createLinkConnectionProjectTRSBoard);
+// app.use(forecastGenerator);
 /** EDIT Actions */
 // app.use(getItemsEditItemName);
 

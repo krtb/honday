@@ -9,10 +9,11 @@ const resultOutputPath = '../outputFiles/outData3.json';
 const productCodesObj = require('../assets/2023-01-26_current_product_codes.json')
 
 /** Global Variables */
-let mondayBoardID = process.env.PROJECT_ROLLUP_BOARD;
-let projectTrsBoard = process.env.PROJECT_TRS_BOARD;
+let projectRollUpBoardId = process.env.PROJECT_ROLLUP_BOARD;
+let budgetBoardId = process.env.BUDGETING_BOARD;
+let projectTrsBoardId = process.env.PROJECT_TRS_BOARD;
 // MONDAY_DEV_BOARD_ID;
-let arrayOfProjectTrsBoardObjects;
+let arrayOfprojectTrsBoardIdObjects;
 
 /** Axios */
 const axiosURL = "https://api.monday.com/v2";
@@ -43,7 +44,7 @@ Object.assign(module.exports, {
   assignedProjectPSCodes: async (req, res, next)=>{
     {
       let query = `{
-        boards (ids: ${mondayBoardID}) {
+        boards (ids: ${projectRollUpBoardId}) {
           items (limit: 100) {
             id
             name
@@ -87,7 +88,7 @@ Object.assign(module.exports, {
 },
 rollUpBoardNewAndAssignedGroups: async ()=>{
 	let query = `{
-		boards (ids: ${mondayBoardID}) 
+		boards (ids: ${projectRollUpBoardId}) 
 		{ groups (ids: status)
 			{ title color position }
 		}
@@ -102,7 +103,7 @@ rollUpBoardNewAndAssignedGroups: async ()=>{
 projectAndProductCodeBuilder: async (req, res, next)=>{
 //Get all items from Monday Project Rollup board
 
-	let query = `{ boards(ids: ${mondayBoardID}) { groups { id title } items(limit: 100) { id name column_values{id title value text} group {title}  } } }`;
+	let query = `{ boards(ids: ${projectRollUpBoardId}) { groups { id title } items(limit: 100) { id name column_values{id title value text} group {title}  } } }`;
 
 	const projectRollUpBoardResponse = await axios.post(axiosURL,{query}, axiosConfig).then(resp => resp)
 	.catch(function (error) {
@@ -146,19 +147,19 @@ projectAndProductCodeBuilder: async (req, res, next)=>{
 				let projectManagerName = typeof anItem.column_values[12].value
 				if(anItem.group.title === "Assigned" 
 				&& projectManagerName === "string"){
-					let projectDateObj = JSON.parse(anItem.column_values[28].value);
+					let projectDateObj = JSON.parse(anItem.column_values[28].value)
 					let projectCodeText = anItem.column_values[1].text
-					let startDateString = projectDateObj.from;
-					let endDateString = projectDateObj.to;
+					let startDateString = projectDateObj !== null || undefined? projectDateObj.from : "No timeline value set.";
+					let endDateString = projectDateObj !== null || undefined? projectDateObj.to : "No timeline value set.";
 					let totalProjectDays = getTotalAmountOfDays(startDateString, endDateString);
 
 					let primaryProjectInfoSet = {
 						monday_id: anItem.id,
-						project_name: anItem.name,
 						product_code: projectCodeText,
 						qty: Number(anItem.column_values[54].text),
 						total_product_hours: pcHoursFinder(projectCodeText, productCodesObj),
 						ps_number: anItem.column_values[2].text,
+						customer_name: anItem.name,
 						project_status: anItem.column_values[6].text,
 						project_manager_profile: anItem.column_values[11].value,
 						project_manager_name: anItem.column_values[12].text,
@@ -177,21 +178,101 @@ projectAndProductCodeBuilder: async (req, res, next)=>{
 				}
 
 	});
-	res.locals.arrayOfAssignedProjects = arrayOfAssignedProjects
-	console.log(`Assigned projects collected.`);
+	
+		res.locals.arrayOfAssignedProjects = arrayOfAssignedProjects
+		console.log(`Assigned projects collected.`);
 	next()
 	} else {
 	console.log(`Error found: ${projectRollUpBoardResponse.data.errors.message}`)
 	}
 },
-	forecastGenerator: async(req,res,next)=>{
-		let arrayOfAssignedProjects = res.locals.arrayOfAssignedProjects
-		//TODO: 
-		// 1 - build GraphQL request to CREATE item in Monday
-		// 2 - Loop over array of projects to send
-		// 3 - Test creating 1 forecast item
-		// 4 - Create DELETION Request, for cases where items need to be deleted in  bulk
+createLinkConnectionProjectTRSBoard: async(req, res, next)=>{
+	
+},
+forecastGenerator: async(req,res,next)=>{
+	let arrayOfAssignedProjects = res.locals.arrayOfAssignedProjects
+	let mondayItemWithColumns
+	//TODO: 
+	// 1 - build GraphQL request to CREATE item in Monday
+	// 2 - Loop over array of projects to send
+	// 3 - Test creating 1 forecast item
+	// 4 - Create DELETION Request, for cases where items need to be deleted in  bulk
+
+	let query = `mutation ( 
+		$boardId: Int!, 
+		$myItemName: String!,
+		$column_values: JSON!
+	){
+	create_item(
+		board_id: $boardId,
+		item_name: $myItemName,
+		create_labels_if_missing: true,
+		column_values: $column_values
+	)
+	{id}
+	}`;
 
 
-	},
+	if (arrayOfAssignedProjects !== undefined) {
+		
+		mondayItemWithColumns = arrayOfAssignedProjects.map((projectObjAssignedStat)=> {
+			console.log(projectObjAssignedStat, `<--- logging my test case here: projectObjAssignedStat ---`);
+			let mondayStyledObj = JSON.stringify({
+
+				"boardId": budgetBoardId,
+				"myItemName": projectObjAssignedStat.timeTrackingItemTitle,
+				"column_values": JSON.stringify({
+					"person": {"personsAndTeams":[{"id": projectObjAssignedStat.matchingHarvestUserInMonday.id ,"kind":"person"}]},
+					"date4": {"date": projectObjAssignedStat.timeTrackingItemDate},
+					"numbers": projectObjAssignedStat.harvestUserHours,
+					"notes75": projectObjAssignedStat.harvestUserNotes,
+					"connect_boards5": {"changed_at":"2022-05-11T17:16:52.729Z","linkedPulseIds":[{"linkedPulseId": parseFloat(projectObjAssignedStat.justTrsId)}]}
+				})
+			});
+			
+			return mondayStyledObj;
+
+		})
+	
+	} 
+
+	const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
+	console.log(`mondayItemWithColumns Count: ${mondayItemWithColumns.length - 1} <---`);
+	
+	async function loadAPIRequestsWithDelayTimer() {
+		for (var i = 0; i <= mondayItemWithColumns.length - 1; i++) {
+
+			console.log(`Currently on item ${i} of  ${mondayItemWithColumns.length - 1}`)
+
+			axios.post(mondayURL,
+				{
+					'query': query,
+					'variables': mondayItemWithColumns[i]
+				}, 
+				{
+					headers: {
+						'Content-Type': `application/json`,
+						'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
+					},
+				}
+				)
+				.then((response)=>{
+					let returnedMondayItem = response.data.data.create_item
+					console.log(returnedMondayItem, "Status: Success, Item Created.");
+					next()
+				})
+				.catch((error)=> {
+
+					if( error.response ){
+						console.log(error.response.data);
+						console.log('There was an error in loadAPIRequestsWithDelayTimer(): ' + error);
+					}
+
+				})
+				await timer(1000);
+		}
+		return
+	}
+	// loadAPIRequestsWithDelayTimer()
+},
 });

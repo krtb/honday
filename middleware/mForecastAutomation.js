@@ -1,20 +1,22 @@
 const axios = require('axios');
 const _ = require('lodash');
 
-const { avoidTimeout } = require('../utils/avoidTimeout.js');
 const { writeJsonToFile, readFromJsonFile } = require('../utils/readWriteJSON.js');
 const localInputFileCreationPath = '../inputFiles/inputData.json';
 const test_json_file = require('../inputFiles/inputData.json');
 const resultOutputPath = '../outputFiles/outData3.json';
 const productCodesObj = require('../assets/2023-01-26_current_product_codes.json')
-
 /** Global Variables */
 let projectRollUpBoardId = process.env.PROJECT_ROLLUP_BOARD;
 let budgetBoardId = process.env.BUDGETING_BOARD;
 let projectTrsBoardId = process.env.PROJECT_TRS_BOARD;
+let arrayOfProjectTrsBoardObjects = [];
+let arrayOfTargetTrsProjData = []; 
+
 // MONDAY_DEV_BOARD_ID;
 let arrayOfprojectTrsBoardIdObjects;
-
+// Utils
+const { avoidTimeout, sendWithTimeout } = require('../utils/avoidTimeout.js');
 /** Axios */
 const axiosURL = "https://api.monday.com/v2";
 const axiosConfig = {
@@ -187,7 +189,24 @@ projectAndProductCodeBuilder: async (req, res, next)=>{
 	}
 },
 createLinkConnectionProjectTRSBoard: async(req, res, next)=>{
-	
+
+	let projectTrsRequestList = await sendWithTimeout(axiosURL, projectTrsBoardId)
+	 console.log(projectTrsRequestList, `<--- logging my test case here: projectTrsRequestList ---`);
+
+	res.locals.arrayOfProjectTrsBoardObjects = arrayOfProjectTrsBoardObjects
+
+	 arrayOfProjectTrsBoardObjects.map((mondayTrsItem)=>{
+		let projectTrsIdAndPSCode ={
+			project_name: mondayTrsItem.name,
+			monday_id: mondayTrsItem.id,
+			link_to_time_tracking: mondayTrsItem.column_values[26].value,
+			customer_name: mondayTrsItem.column_values[4].text,
+			project_rollup_board_link_pulse_id: mondayTrsItem.column_values[5].value,
+		}
+		arrayOfTargetTrsProjData.push(projectTrsIdAndPSCode)
+	})
+
+	res.locals.arrayOfTargetTrsProjData = arrayOfTargetTrsProjData;
 },
 forecastGenerator: async(req,res,next)=>{
 	let arrayOfAssignedProjects = res.locals.arrayOfAssignedProjects

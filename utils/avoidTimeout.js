@@ -25,7 +25,7 @@ Object.assign(module.exports,
       * @param {object} listOfItems - defaults to global queryTemplate variable, which Axius consumes.
       * @param {object} defaultHeaders - defaults to global headersTemplate variable, which Axios consumes
       */
-    avoidTimeout: async function avoidTimeout(listOfItems) {
+    avoidTimeout: async function avoidTimeout(listOfItems, targetUrl) {
 
       const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
 
@@ -34,7 +34,7 @@ Object.assign(module.exports,
 
           console.log(`item ${i + 1} of ${listOfItems.length}...`,  listOfItems[i] )
 
-          axios.post(axiosURL,
+          axios.post(targetUrl,
             {query: listOfItems[i] },
             { 
               headers: {
@@ -46,7 +46,7 @@ Object.assign(module.exports,
           .then(res =>{ 
 
             if(!res.data.errors){
-              console.log(res.data.data, `<---- Item ${i + 1} Deleted...`, res.data)
+              console.log(res.data.data, `<---- ${i + 1} Item has been handled.`, res.data)
               console.log(listOfItems[i], '<--- Current default query being sent')
             } else {
               console.log(res.data.errors, res.data.errors[0].locations, '<--- Errors returned from Monday.com... ',)
@@ -65,6 +65,70 @@ Object.assign(module.exports,
       }
       loadAPIRequestsWithDelayTimer()
       
+    },
+  sendWithTimeout: async function avoidTimeout(targetUrl, board_id) {
+    capturedData = [];
+    let apiPageNumber = 1;
+    let checkIfArrayLoaded = ["intial_load"];
+    const timer = milliseconds => new Promise(response => setTimeout(response, milliseconds))
+
+    async function loadAPIRequestsWithDelayTimer() {
+      for (var i = 0;  checkIfArrayLoaded.length > 0; i++) {
+        console.log(`On page ${apiPageNumber} of the current API.`)
+        let query = `{
+          boards (ids: ${board_id}) {
+            items (limit: 50, page: ${apiPageNumber}) {
+              id
+              name
+              column_values {
+                id
+                title
+                value
+                text
+              }
+            }
+          }
+        }`;
+        // Continue through API pagination
+        apiPageNumber++
+        async function getSourceData(currentItem) {
+          await axios.post(targetUrl,
+            {query},
+            { 
+              headers: {
+              'Content-Type': `application/json`,
+              'Authorization': `${process.env.MONDAY_APIV2_TOKEN_KURT}` 
+              },
+            }
+          )
+          .then(res =>{
+            let responseHasItems = res.data.data.boards[0].items.length > 0? true : false;
+            let responseHasNoErrors = res.data.errors === undefined ? true : false;
+            if(responseHasNoErrors && responseHasItems){
+              let batchOfItems = res.data.data.boards[0].items
+              batchOfItems.map((aItemObj)=>{
+                capturedData.push(aItemObj)
+              })
+            } else if(responseHasNoErrors && !responseHasItems) {
+              return capturedData
+            } else {
+              console.log(`Error Found Here => ${res.data.errors}`)
+            }
+          })
+          .catch((res)=>{ 
+            console.log(res, "<----- Error Caught.")
+          })
+        }
+        getSourceData()
+
+        await timer(1000);
+
+      }
+
+      console.log('Item added to array! ');
     }
+    loadAPIRequestsWithDelayTimer()
+    
+  },
   }
 );

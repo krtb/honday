@@ -190,9 +190,6 @@ projectAndProductCodeBuilder: async (req, res, next)=>{
 },
 createLinkConnectionProjectTRSBoard: async(req, res, next)=>{
 
-	let projectTrsRequestList = await sendWithTimeout(axiosURL, projectTrsBoardId)
-	 console.log(projectTrsRequestList, `<--- logging my test case here: projectTrsRequestList ---`);
-
 	res.locals.arrayOfProjectTrsBoardObjects = arrayOfProjectTrsBoardObjects
 
 	 arrayOfProjectTrsBoardObjects.map((mondayTrsItem)=>{
@@ -205,8 +202,12 @@ createLinkConnectionProjectTRSBoard: async(req, res, next)=>{
 		}
 		arrayOfTargetTrsProjData.push(projectTrsIdAndPSCode)
 	})
-
 	res.locals.arrayOfTargetTrsProjData = arrayOfTargetTrsProjData;
+
+	let projectTrsRequestList = await sendWithTimeout(axiosURL, projectTrsBoardId)
+	projectTrsRequestList.map((anItem)=>{
+		console.log(anItem)
+	})
 },
 forecastGenerator: async(req,res,next)=>{
 	let arrayOfAssignedProjects = res.locals.arrayOfAssignedProjects
